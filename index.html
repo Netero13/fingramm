@@ -121,6 +121,7 @@
   .delta{font-family:'IBM Plex Mono',monospace;font-size:1rem;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
   .calc-label{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--text-2);opacity:0.7;margin-top:10px;}
   .calc-detail{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);margin-top:2px;}
+  .phone-note{margin-top:12px;padding:10px 14px;background:var(--emerald-soft);border-radius:8px;color:var(--emerald);font-size:0.85rem;font-weight:600;}
   .delta .up{color:var(--emerald);}
   .delta .down{color:var(--brick);}
 
@@ -245,7 +246,7 @@
         {key:'bnpl', title:'Розстрочка 0%', badge:'0%, якщо вчасно', desc:'Розстрочка від магазину на 4–6 платежів — річ уже твоя. Якщо платити вчасно — жодної переплати.', debtType:'none', capitalDelta:0, reward:true},
         {key:'friend', title:'Позика у знайомих', badge:'без відсотків', desc:'Позичаєш у друга чи батьків — і отримуєш бажане просто зараз. Грошей у відсотках не втрачаєш, але ставиш під тиск стосунки.', debtType:'friend', capitalDelta:0, reward:true},
         {key:'pawnshop', title:'Ломбард', badge:'≈10–15% на місяць', desc:'Гроші під заставу речі — на руках негайно. Не встиг викупити — річ втрачається назавжди.', debtType:'pawnshop', capitalDelta:-2400, reward:true},
-        {key:'pyramid', title:'Фінансова піраміда', badge:'ризик 100%', desc:'Спроба швидко подвоїти бракуючу суму замість того, щоб чесно її заробити. Жодної речі на руках просто зараз — лише обіцянка майбутнього прибутку. Ймовірність повної втрати — близько 100%.', debtType:'pyramid', capitalDelta:-18000, reward:false}
+        {key:'pyramid', title:'Фінансова піраміда', badge:'ризик 100%', desc:'Спроба швидко подвоїти бракуючу суму замість того, щоб чесно її заробити. Жодної речі на руках просто зараз — лише обіцянка майбутнього прибутку. Практично все вкладене згорає безповоротно, і повернути гроші юридично неможливо.', debtType:'pyramid', capitalDelta:-18000, reward:false}
       ]
     },
     entertainment: {
@@ -349,9 +350,12 @@
       } else if (opt.key === 'mfo'){
         calcLabel = 'позика × (1 + денна ставка × дні) = сума до повернення';
         calc = fmt(START_CAPITAL) + ' × (1 + 1,5% × 30 днів) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
+      } else if (opt.key === 'pawnshop'){
+        calcLabel = 'застава × (1 + ставка за місяць) = сума до викупу';
+        calc = fmt(START_CAPITAL) + ' × (1 + ' + pct + '% за місяць) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
       } else {
-        calcLabel = 'позика × (1 + ставка) = сума до повернення';
-        calc = fmt(START_CAPITAL) + ' × (1 + ' + pct + '%) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
+        calcLabel = 'позика × (1 + ставка за рік) = сума до повернення';
+        calc = fmt(START_CAPITAL) + ' × (1 + ' + pct + '% за рік) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
       }
     }
     return {
@@ -650,6 +654,7 @@
       '<div class="delta">' + fmt(r.before) + ' → <span id="deltaAfterNum">' + fmt(r.before) + '</span>' +
       ' <span class="' + (delta >= 0 ? 'up' : 'down') + '">(' + (delta >= 0 ? '+' : '') + fmt(delta).replace(' ₴','') + ' ₴)</span></div>' +
       (r.calc ? ((r.calcLabel ? '<div class="calc-label">' + r.calcLabel + '</div>' : '') + '<div class="calc-detail">↳ ' + r.calc + '</div>') : '') +
+      (r.phoneNote ? '<div class="phone-note">' + r.phoneNote + '</div>' : '') +
       '</div>' +
       '<div class="actions"><button class="btn" onclick="Fingramm.nextCycle()">' + (isLast ? 'Побачити фінал' : 'Далі →') + '</button></div>';
     return html;
@@ -746,12 +751,18 @@
       var opt = sc.options.filter(function(o){ return o.key === optKey; })[0];
       var before = snapshotRelevant(state);
       var result = RESOLVERS[state.pendingScenario](opt);
-      if (!state.hasPhone && state.capital >= PHONE_PRICE){ state.hasPhone = true; state.phoneVia = 'saved'; }
+      if (!state.hasPhone && state.capital >= PHONE_PRICE){
+        var capBeforePurchase = state.capital;
+        state.capital = clamp0(state.capital - PHONE_PRICE);
+        state.hasPhone = true; state.phoneVia = 'saved';
+        result.phoneNote = '🎉 Назбирав достатньо для iPhone за готівку — ' + fmt(PHONE_PRICE) + ' списано: ' + fmt(capBeforePurchase) + ' → ' + fmt(state.capital) + '.';
+      }
       var after = snapshotRelevant(state);
       state.lastChangeSnap = { before: before, after: after };
       state.history.push({
         cycle: state.cycle + 1, scenario: sc.title, option: opt.title,
-        text: result.text, before: result.before, after: result.after, color: result.color
+        text: result.text + (result.phoneNote ? ' ' + result.phoneNote : ''),
+        before: result.before, after: state.capital, color: result.color
       });
       state.pendingResult = result;
       state.screen = 'consequence';
