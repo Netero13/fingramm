@@ -466,11 +466,14 @@
     var vacancy = s.coursePaid ? info.paidVacancy : info.freeVacancy;
     var salary = s.coursePaid ? info.paidSalary : info.freeSalary;
     var vac = vacancy ? ('відкриває вакансію ' + vacancy + ' за $' + salary + '/міс (≈' + salaryUahRange(salary) + '/міс)') : 'знімає мовний бар’єр і відкриває міжнародний ринок вакансій';
-    if (arch === 'pit') return 'Курс ' + info.label + ' ' + vac + ' — але зараз ці навички не рятують від боргу.';
+    var payoutNote = s.potentialPayoutClaimed
+      ? (' Ці самі навички згодом і справді принесли гроші: ' + fmt(s.coursePaid ? info.payoutPaid : info.payoutFree) + ' одноразовим підробітком за фахом.')
+      : '';
+    if (arch === 'pit') return 'Курс ' + info.label + ' ' + vac + ' — але зараз ці навички не рятують від боргу.' + payoutNote;
     var lead = s.coursePaid
       ? ('Платний курс ' + info.label + ' дав перевагу над іншими кандидатами: він ')
       : ('Безкоштовний курс ' + info.label + ' обрав, коли на платний забракло грошей, — і все одно ');
-    return lead + vac + '.';
+    return lead + vac + '.' + payoutNote;
   }
   function phoneLine(s, arch){
     if (!s.hasPhone) return 'iPhone так і лишився мрією — ні готівки, ні рішучості взяти в борг на нього не знайшлось.';
