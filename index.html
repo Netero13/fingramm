@@ -197,6 +197,8 @@
   "use strict";
   var START_CAPITAL = 20000;
   var PHONE_PRICE = 40000;
+  var REPAY_COST = {friend:5000, pawnshop:10000, bank:15000, mfo:25000};
+  var DEBT_LABELS = {none:'немає', bank:'банк', mfo:'МФО', friend:'друзі', pyramid:'піраміда', pawnshop:'ломбард'};
 
   var SEVERITY = ['none','friend','pawnshop','bank','mfo','pyramid'];
   var ADDICTION_ORDER = ['none','mild','severe'];
@@ -457,7 +459,7 @@
 
   function chipsRow(showDiff){
     var addLabel = {none:'немає', mild:'легка', severe:'важка'}[state.addiction];
-    var debtLabel = {none:'немає', bank:'банк', mfo:'МФО', friend:'друзі', pyramid:'піраміда', pawnshop:'ломбард'}[state.debtType];
+    var debtLabel = DEBT_LABELS[state.debtType];
     var courseLabel = state.hasCourse ? (courseInfo[state.courseTrack].label + (state.coursePaid ? ' (платно)' : ' (безкоштовно)')) : 'немає';
     var addClass = state.addiction === 'severe' ? 'danger' : (state.addiction === 'mild' ? 'warn' : '');
     var debtClass = debtTraps(state.debtType) ? 'danger' : (state.debtType !== 'none' ? 'warn' : '');
@@ -575,7 +577,7 @@
     if (a.hasPhone && !b.hasPhone) bits.push('📱 отримав iPhone' + (state.phoneVia === 'saved' ? ' (за готівку)' : ' (у борг)'));
     if (a.hasCourse && !b.hasCourse) bits.push('новий курс');
     if (a.addiction !== b.addiction) bits.push('залежність → ' + ({none:'немає',mild:'легка',severe:'важка'})[a.addiction]);
-    if (a.debtType !== b.debtType) bits.push('новий борг: ' + ({none:'немає',bank:'банк',mfo:'МФО',friend:'друзі',pyramid:'піраміда',pawnshop:'ломбард'})[a.debtType]);
+    if (a.debtType !== b.debtType) bits.push(a.debtType === 'none' ? '✅ борг погашено' : 'новий борг: ' + DEBT_LABELS[a.debtType]);
     if (!bits.length) return '';
     return '<div class="cycle-banner"><span class="tag">✓ Рік ' + state.cycle + ' завершено</span>Зміни: ' + bits.join(' · ') + '.</div>';
   }
@@ -639,6 +641,18 @@
           '<div class="lockmsg">🔒 Потрібно ще ' + fmt(opt.cost - state.capital) + '</div></div>';
       }
     });
+    if (state.pendingScenario === 'quick' && REPAY_COST[state.debtType]){
+      var repayCost = REPAY_COST[state.debtType];
+      if (state.capital >= repayCost){
+        html += '<div class="card" style="--c:var(--emerald)" onclick="Fingramm.repayDebt()">' +
+          '<h3>Погасити борг</h3><p>Виплачуєш ' + fmt(repayCost) + ' одноразово й закриваєш борг повністю — інвестиції знову стануть доступні.</p>' +
+          '<span class="rate" style="color:var(--emerald)">-' + fmt(repayCost) + ' · закриває борг</span>' +
+          '</div>';
+      } else {
+        html += '<div class="card locked"><h3>Погасити борг</h3><p>Виплачуєш ' + fmt(repayCost) + ' одноразово й закриваєш борг повністю — інвестиції знову стануть доступні.</p>' +
+          '<div class="lockmsg">🔒 Потрібно ще ' + fmt(repayCost - state.capital) + '</div></div>';
+      }
+    }
     html += '</div><div class="actions"><button class="btn ghost" onclick="Fingramm.backToMenu()">← Назад</button></div>';
     return html;
   }
@@ -784,6 +798,28 @@
       if (yes === undefined){ showRestartConfirm = true; render(); return; }
       showRestartConfirm = false;
       if (yes) state = freshState();
+      render();
+    },
+    repayDebt: function(){
+      var cost = REPAY_COST[state.debtType];
+      if (!cost || state.capital < cost) return;
+      var before = snapshotRelevant(state);
+      var oldDebtLabel = DEBT_LABELS[state.debtType];
+      state.capital = clamp0(state.capital - cost);
+      state.debtType = 'none';
+      state.justGambledLoss = false;
+      var after = snapshotRelevant(state);
+      state.lastChangeSnap = { before: before, after: after };
+      var text = 'Виплатив ' + fmt(cost) + ' і закрив борг (' + oldDebtLabel + '). Інвестиції знову доступні.';
+      state.history.push({
+        cycle: state.cycle + 1, scenario: 'Швидкі рішення', option: 'Погасили борг',
+        text: text, before: before.capital, after: state.capital, color: 'var(--emerald)'
+      });
+      state.pendingResult = {
+        color: 'var(--emerald)', title: 'Борг погашено',
+        text: text, before: before.capital, after: state.capital
+      };
+      state.screen = 'consequence';
       render();
     },
     toggleTheme: function(){
