@@ -241,7 +241,11 @@
     },
     quick: {
       key:'quick', title:'Швидкі рішення', color:'var(--amber)',
-      available: function(){ return true; },
+      available: function(s){ return !s.hasPhone || !!REPAY_COST[s.debtType]; },
+      lockedReason: function(s){
+        if (s.debtType !== 'none' && !REPAY_COST[s.debtType]) return 'iPhone вже маєш, а борг перед пірамідою погасити нікому — грошей просто більше немає';
+        return 'iPhone вже маєш і боргів немає — тут більше нічого робити';
+      },
       options: [
         {key:'bank', title:'Кредит у банку', badge:'≈35% річних', desc:'Береш 20 000 ₴ під ≈35% річних — і тримаєш бажану річ у руках уже сьогодні. За рік повернути доведеться ≈27 000 ₴ — переплата 7 000 ₴.', debtType:'bank', capitalDelta:-7000, reward:true},
         {key:'mfo', title:'МФО', badge:'≈1,5%/день', desc:'Береш 20 000 ₴ у мікрокредитній організації — гроші на картці за 10 хвилин. Лише за 30 днів переплата сягає 9 000 ₴ — 29 000 ₴ загалом.', debtType:'mfo', capitalDelta:-9000, reward:true},
@@ -617,9 +621,13 @@
 
   function renderOptions(){
     var sc = SCENARIOS[state.pendingScenario];
+    var phoneDone = state.pendingScenario === 'quick' && state.hasPhone;
     var html = '<h2 class="screen-title">' + sc.title + '</h2>' +
-      chipsRow() + '<div class="opt-list">';
+      chipsRow() +
+      (phoneDone ? '<p class="screen-sub">iPhone вже маєш — лишилось тільки розрахуватися з боргом.</p>' : '') +
+      '<div class="opt-list">';
     sc.options.forEach(function(opt){
+      if (phoneDone) return;
       var affordable = !opt.cost || opt.cost <= state.capital;
       if (affordable){
         var rewardBadge = '';
