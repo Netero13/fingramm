@@ -113,6 +113,7 @@
   .card.locked .lockmsg{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;color:var(--text-2);margin-top:8px;}
 
   .opt-list{display:flex;flex-direction:column;gap:12px;}
+  .fun-fact{display:block;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:0.82rem;color:var(--text-2);}
 
   .consequence{border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);padding:28px;border-left:4px solid var(--c,var(--border));}
   .consequence .tag{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--c,var(--text-2));display:block;margin-bottom:10px;}
@@ -278,6 +279,15 @@
         {key:'lottery', title:'Миттєва лотерея', badge:'шанс джекпоту ≈1 на мільйони', desc:'Маленькі ставки, що формують звичку частих дрібних програшів.'}
       ]
     }
+  };
+
+  var TRACK_FACTS = {
+    it: 'Grammarly і GitLab заснували українці — сьогодні ними користуються мільйони людей у світі.',
+    design: 'GSC Game World — кияни, що створили S.T.A.L.K.E.R., один із найвідоміших ігрових проєктів у світі.',
+    english: 'Preply — сервіс для пошуку репетиторів, заснований трьома киянами, сьогодні працює у 180+ країнах.',
+    marketing: 'Київська агенція Banda не раз перемагала на Каннських Левах — головному світовому конкурсі реклами.',
+    entrepreneurship: 'Petcube — стартап трьох киян, що зібрав пів мільйона доларів на Kickstarter і виріс у міжнародний бренд.',
+    ai: 'Український Respeecher озвучив молодого Люка Скайвокера в серіалах Disney за допомогою ШІ.'
   };
 
   var TOTAL_CYCLES = 3;
@@ -684,7 +694,8 @@
       var info = courseInfo[t];
       var paidOpt = SCENARIOS.potential.options.filter(function(o){ return o.track === t && o.paid; })[0];
       html += '<div class="card" style="--c:' + SCENARIOS.potential.color + '" onclick="Fingramm.selectTrack(\'' + t + '\')">' +
-        '<h3>' + info.name + '</h3><p>Від безкоштовно до ' + fmt(paidOpt.cost) + ' — платно чи самостійно.</p></div>';
+        '<h3>' + info.name + '</h3><p>Від безкоштовно до ' + fmt(paidOpt.cost) + ' — платно чи самостійно.</p>' +
+        '<span class="fun-fact">🇺🇦 ' + TRACK_FACTS[t] + '</span></div>';
     });
     html += '</div><div class="actions"><button class="btn ghost" onclick="Fingramm.backToMenu()">← Назад</button></div>';
     return html;
