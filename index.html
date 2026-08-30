@@ -56,9 +56,13 @@
   @keyframes seg-pulse{0%,100%{opacity:0.35;}50%{opacity:0.9;}}
   @media (prefers-reduced-motion: reduce){.progress .seg.active::after{animation:none;opacity:0.7;}}
 
-  .topbar-actions{display:flex;gap:16px;justify-content:flex-end;margin-top:10px;}
+  .topbar-actions{display:flex;gap:16px;align-items:center;justify-content:flex-end;margin-top:10px;}
   .topbar-actions button{background:none;border:none;padding:0;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text-2);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
   .topbar-actions button:hover{color:var(--text);}
+  .topbar-actions .confirm-text{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text-2);}
+  .topbar-actions button.confirm-yes,.topbar-actions button.confirm-no{text-decoration:none;border:1px solid var(--border);border-radius:14px;padding:3px 11px;}
+  .topbar-actions button.confirm-yes{color:var(--brick);border-color:var(--brick);}
+  .topbar-actions button.confirm-no{color:var(--text-2);}
 
   .calc-toggle{margin-top:36px;text-align:left;max-width:440px;margin-left:auto;margin-right:auto;}
   .calc-toggle summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text-2);text-align:center;list-style:none;}
@@ -147,6 +151,10 @@
 
   .compare{margin-top:22px;border:1px dashed var(--border);border-radius:10px;padding:18px 20px;background:var(--surface);}
   .compare .tag{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-2);display:block;margin-bottom:8px;}
+  .compare.forecast{border:1px solid var(--c,var(--border));border-left-width:3px;}
+  .compare.forecast .tag{color:var(--c,var(--text-2));}
+  .compare.altview{border:1px dashed var(--indigo);border-left:3px solid var(--indigo);}
+  .compare.altview .tag{color:var(--indigo);}
 
   .actions{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap;}
 
@@ -262,6 +270,7 @@
     };
   }
   var state = load() || freshState();
+  var showRestartConfirm = false;
 
   function save(){ try{ localStorage.setItem('fingramm_state', JSON.stringify(state)); }catch(e){} }
   function load(){
@@ -457,10 +466,17 @@
       else if (i === state.cycle && !isFinal) cls += ' active';
       segs += '<div class="' + cls + '"></div>';
     }
-    var actions = isFinal ? '' :
-      '<div class="topbar-actions">' +
-        '<button onclick="Fingramm.restartConfirm()">Почати спочатку</button>' +
-      '</div>';
+    var actions = isFinal ? '' : (
+      showRestartConfirm ?
+        '<div class="topbar-actions">' +
+          '<span class="confirm-text">Точно спочатку?</span>' +
+          '<button class="confirm-yes" onclick="Fingramm.confirmRestart(true)">Так</button>' +
+          '<button class="confirm-no" onclick="Fingramm.confirmRestart(false)">Ні</button>' +
+        '</div>' :
+        '<div class="topbar-actions">' +
+          '<button onclick="Fingramm.confirmRestart()">Почати спочатку</button>' +
+        '</div>'
+    );
     return '<div class="topbar">' +
       '<div class="topbar-row"><div class="logo">Fingramm</div>' +
         '<div style="display:flex;align-items:center;gap:10px;">' + moodBadge() + '<div class="cyc-badge mono">' + label + '</div></div>' +
@@ -655,8 +671,8 @@
         meter('Залежність', addFill, 'var(--brick)') +
         meter('Борг', debtFill, 'var(--amber)') +
       '</div>' +
-      '<div class="compare"><span class="tag">Через 10 років</span>' + forecastLine(state, e.arch) + '</div>' +
-      '<div class="compare"><span class="tag">А що якби</span>Якби ці 20 000 ₴ усі три роки просто лежали в ' + cmp.title + (cmp.approx ? ' під орієнтовно ' : ' під ') + Math.round(cmp.rate*100) + '% — вийшло б ' + fmt(alt) + '. У тебе зараз ' + fmt(state.capital) +
+      '<div class="compare forecast" style="--c:' + e.color + '"><span class="tag">⏳ Через 10 років</span>' + forecastLine(state, e.arch) + '</div>' +
+      '<div class="compare altview"><span class="tag">🔀 А що якби</span>Якби ці 20 000 ₴ усі три роки просто лежали в ' + cmp.title + (cmp.approx ? ' під орієнтовно ' : ' під ') + Math.round(cmp.rate*100) + '% — вийшло б ' + fmt(alt) + '. У тебе зараз ' + fmt(state.capital) +
         ' (' + (diff>=0?'+':'') + fmt(diff) + ' до цього орієнтира).</div>' +
       '<div class="actions"><button class="btn" onclick="Fingramm.restart()">Зіграти ще раз</button></div>';
   }
@@ -744,11 +760,11 @@
       render();
     },
     restart: function(){ state = freshState(); render(); },
-    restartConfirm: function(){
-      if (window.confirm('Почати гру спочатку? Поточний прогрес буде втрачено.')){
-        state = freshState();
-        render();
-      }
+    confirmRestart: function(yes){
+      if (yes === undefined){ showRestartConfirm = true; render(); return; }
+      showRestartConfirm = false;
+      if (yes) state = freshState();
+      render();
     }
   };
 
