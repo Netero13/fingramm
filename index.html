@@ -1,0 +1,594 @@
+<meta charset="UTF-8">
+<title>Fingramm</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Literata:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F5F7F5; --surface:#FFFFFF; --surface-2:#EEF2EE;
+    --text:#16211C; --text-2:#55635B; --border:#DCE3DE;
+    --emerald:#1F7A5C; --emerald-soft:#E4F0EA;
+    --indigo:#35507A; --indigo-soft:#E7ECF3;
+    --amber:#96691D; --amber-soft:#F5ECD8;
+    --brick:#A83E28; --brick-soft:#F6E5E0;
+    --shadow: 0 1px 2px rgba(20,30,25,0.06), 0 8px 24px rgba(20,30,25,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12160F; --surface:#1A2018; --surface-2:#212820;
+      --text:#EBEFE9; --text-2:#A7B3A9; --border:#2C352A;
+      --emerald:#49CE9C; --emerald-soft:#1B2E26;
+      --indigo:#8FADDE; --indigo-soft:#1E2733;
+      --amber:#E3B24F; --amber-soft:#2F2A18;
+      --brick:#E27757; --brick-soft:#33221C;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 28px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12160F; --surface:#1A2018; --surface-2:#212820;
+    --text:#EBEFE9; --text-2:#A7B3A9; --border:#2C352A;
+    --emerald:#49CE9C; --emerald-soft:#1B2E26;
+    --indigo:#8FADDE; --indigo-soft:#1E2733;
+    --amber:#E3B24F; --amber-soft:#2F2A18;
+    --brick:#E27757; --brick-soft:#33221C;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 28px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Literata',Georgia,serif;line-height:1.6;min-height:100vh;}
+  h1,h2,h3{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:0.01em;text-wrap:balance;line-height:1.05;margin:0;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  button{font-family:inherit;cursor:pointer;}
+  button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--emerald);outline-offset:2px;}
+
+  #app{max-width:720px;margin:0 auto;padding:24px 20px 80px;min-height:100vh;}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 4px 22px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+  .logo{font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:0.02em;}
+  .cyc-badge{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+  .chip{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);display:flex;align-items:center;gap:6px;}
+  .chip b{color:var(--text);font-weight:600;}
+  .chip.warn{border-color:var(--amber);color:var(--amber);}
+  .chip.danger{border-color:var(--brick);color:var(--brick);}
+
+  .hero{text-align:center;padding:60px 10px 20px;}
+  .hero h1{font-size:3.4rem;margin-bottom:10px;}
+  .hero p{max-width:46ch;margin:0 auto 28px;color:var(--text-2);font-size:1.08rem;}
+  .cap-display{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;color:var(--emerald);margin-bottom:32px;}
+
+  .btn{display:inline-block;background:var(--text);color:var(--bg);border:none;border-radius:8px;padding:14px 28px;font-size:1rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;font-family:'IBM Plex Mono',monospace;}
+  .btn:hover{opacity:0.88;}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border);text-transform:none;letter-spacing:0;font-family:'Literata',serif;font-weight:500;padding:10px 18px;}
+
+  h2.screen-title{font-size:1.7rem;margin-bottom:6px;}
+  .screen-sub{color:var(--text-2);margin-bottom:24px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+
+  .card{border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);padding:20px;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;border-left:4px solid var(--c, var(--border));}
+  .card:hover{transform:translateY(-2px);}
+  .card h3{font-size:1.15rem;margin-bottom:6px;color:var(--text);}
+  .card p{margin:0;color:var(--text-2);font-size:0.92rem;}
+  .card .rate{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--c,var(--text-2));margin-top:8px;display:block;}
+  .card.locked{cursor:not-allowed;opacity:0.5;background:var(--surface-2);}
+  .card.locked:hover{transform:none;}
+  .card.locked .lockmsg{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;color:var(--text-2);margin-top:8px;}
+
+  .opt-list{display:flex;flex-direction:column;gap:12px;}
+
+  .consequence{border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);padding:28px;border-left:4px solid var(--c,var(--border));}
+  .consequence .tag{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--c,var(--text-2));display:block;margin-bottom:10px;}
+  .consequence h3{font-size:1.4rem;margin-bottom:12px;}
+  .consequence p{margin-bottom:10px;}
+  .delta{font-family:'IBM Plex Mono',monospace;font-size:1rem;margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);}
+  .delta .up{color:var(--emerald);}
+  .delta .down{color:var(--brick);}
+
+  .neon{
+    background:radial-gradient(circle at 20% 0%, #3a1030 0%, #170a1c 55%, #0c0810 100%);
+    border-color:#5b1f52; color:#f4e6ff;
+  }
+  .neon .tag{color:#ff6fd8;}
+  .neon h3{color:#fff2fb;}
+  .neon p{color:#dcc4e8;}
+
+  .final-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);padding:30px;border-left:5px solid var(--c,var(--emerald));}
+  .final-card .arch{font-family:'Big Shoulders Display',sans-serif;font-size:2.1rem;text-transform:uppercase;color:var(--c,var(--text));margin-bottom:14px;}
+  .final-card p{font-size:1.05rem;}
+
+  .state-card{margin-top:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:560px){.state-card{grid-template-columns:1fr 1fr;}}
+  .meter{border:1px solid var(--border);border-radius:8px;padding:12px;background:var(--surface-2);text-align:center;}
+  .meter .lbl{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-2);margin-bottom:8px;}
+  .meter .bars{display:flex;gap:3px;justify-content:center;}
+  .meter .bar{width:14px;height:8px;border-radius:2px;background:var(--border);}
+  .meter .bar.on{background:var(--c,var(--emerald));}
+
+  .compare{margin-top:22px;border:1px dashed var(--border);border-radius:10px;padding:18px 20px;background:var(--surface);}
+  .compare .tag{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-2);display:block;margin-bottom:8px;}
+
+  .actions{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap;}
+
+  .chip.up-changed{border-color:var(--emerald);background:var(--emerald-soft);color:var(--emerald);animation:pulse 1.6s ease-in-out 1;}
+  .chip.down-changed{border-color:var(--brick);background:var(--brick-soft);color:var(--brick);animation:pulse 1.6s ease-in-out 1;}
+  .chip.up-changed b,.chip.down-changed b{color:inherit;}
+  .chip .delta-tag{font-weight:600;margin-left:2px;}
+  @keyframes pulse{0%{transform:scale(1);}20%{transform:scale(1.08);}40%{transform:scale(1);}}
+  @media (prefers-reduced-motion: reduce){.chip.up-changed,.chip.down-changed{animation:none;}}
+
+  .cycle-banner{border:1px solid var(--border);border-left:3px solid var(--emerald);background:var(--surface);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:0.9rem;color:var(--text-2);}
+  .cycle-banner b{color:var(--text);}
+  .cycle-banner .tag{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--emerald);display:block;margin-bottom:4px;}
+
+  .reward{display:inline-block;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;padding:3px 10px;border-radius:20px;}
+  .reward.yes{background:var(--emerald-soft);color:var(--emerald);}
+  .reward.no{background:var(--brick-soft);color:var(--brick);}
+
+  .card.locked .lockmsg{display:block;}
+
+  .history-wrap{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;}
+  .history-wrap summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-2);padding:6px 0;}
+  .history-wrap summary:hover{color:var(--text);}
+  .hist-entry{border-left:3px solid var(--c,var(--border));background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:10px 0 0;}
+  .hist-entry .hcyc{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-2);}
+  .hist-entry .htitle{font-weight:600;margin:2px 0 4px;}
+  .hist-entry .htext{font-size:0.88rem;color:var(--text-2);}
+  .hist-entry .hdelta{font-family:'IBM Plex Mono',monospace;font-size:0.82rem;margin-top:6px;}
+</style>
+
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+  var START_CAPITAL = 20000;
+
+  var SEVERITY = ['none','friend','pawnshop','bank','mfo','pyramid'];
+  var ADDICTION_ORDER = ['none','mild','severe'];
+
+  var courseInfo = {
+    it: {label:'IT-розробки', cost:18000, freeVacancy:'Junior Developer', freeSalary:'500–900', paidVacancy:'Developer з портфоліо', paidSalary:'700–1300'},
+    design: {label:'дизайну', cost:14000, freeVacancy:'UI/UX Designer (фриланс)', freeSalary:'600–1200', paidVacancy:'UI/UX Designer (штат)', paidSalary:'850–1700'},
+    english: {label:'English', cost:5000, freeVacancy:null, freeSalary:null, paidVacancy:null, paidSalary:null},
+    marketing: {label:'маркетингу', cost:11000, freeVacancy:'SMM/Marketing Associate', freeSalary:'400–700', paidVacancy:'Marketing Associate (сертифікований)', paidSalary:'600–1050'}
+  };
+
+  var SCENARIOS = {
+    investment: {
+      key:'investment', title:'Інвестиції', color:'var(--emerald)',
+      available: function(s){ return s.capital > 0; },
+      lockedReason: 'Немає капіталу для інвестування',
+      options: [
+        {key:'ovdp', title:'ОВДП', badge:'≈16% річних', desc:'Держава позичає у тебе гроші й повертає з відсотком — найнижчий ризик на ринку.', kind:'fixed', rate:0.16},
+        {key:'deposit', title:'Депозит', badge:'≈14% річних', desc:'Банк платить за те, що гроші лежать у нього. Трохи менш ризиковано за ОВДП, але банк одразу утримує податок.', kind:'fixed', rate:0.14},
+        {key:'currency', title:'Валюта', badge:'без гарантії', desc:'Купівля долара/євро — не прибуток, а страховка від знецінення гривні. Наперед результат не відомий.', kind:'random', min:-0.03, max:0.12},
+        {key:'etf', title:'ETF (індексний фонд)', badge:'≈9% в середньому, волатильно', desc:'Частка одразу сотень великих світових компаній через міжнародного брокера. Прибутковіше на довгому горизонті, але рік на рік не схожий.', kind:'random', min:-0.15, max:0.25}
+      ]
+    },
+    potential: {
+      key:'potential', title:'Потенціал', color:'var(--indigo)',
+      available: function(){ return true; },
+      options: [
+        {key:'it_paid', title:'Курс: IT-розробка (платно)', badge:'18 000 ₴ · пришвидшений', desc:'Приватний буткемп із менторами й портфоліо під ключ — стартова позиція суттєво сильніша.', track:'it', paid:true, cost:18000},
+        {key:'it_free', title:'Курс: IT-розробка (безкоштовно)', badge:'0 ₴ · план Б', desc:'freeCodeCamp / Prometheus — доступно з нульовим бюджетом, але довше й без гарантій.', track:'it', paid:false, cost:0},
+        {key:'design_paid', title:'Курс: Дизайн (платно)', badge:'14 000 ₴ · пришвидшений', desc:'Курс із наставником і реальними проєктами в портфоліо.', track:'design', paid:true, cost:14000},
+        {key:'design_free', title:'Курс: Дизайн (безкоштовно)', badge:'0 ₴ · план Б', desc:'Figma, Unity Learn — основи UI/UX і геймдизайну без жодної гривні витрат.', track:'design', paid:false, cost:0},
+        {key:'english_paid', title:'Курс: English (платно)', badge:'5 000 ₴ · з репетитором', desc:'Індивідуальні заняття — швидший прогрес і впевненість на співбесіді.', track:'english', paid:true, cost:5000},
+        {key:'english_free', title:'Курс: English (безкоштовно)', badge:'0 ₴ · план Б', desc:'Duolingo та безкоштовні курси. Знімає бар’єр для міжнародного ринку, але повільніше.', track:'english', paid:false, cost:0},
+        {key:'marketing_paid', title:'Курс: Маркетинг (платно)', badge:'11 000 ₴ · сертифікований', desc:'Платний курс із сертифікацією, яку визнають роботодавці.', track:'marketing', paid:true, cost:11000},
+        {key:'marketing_free', title:'Курс: Маркетинг (безкоштовно)', badge:'0 ₴ · план Б', desc:'Google Digital Garage — швидкий старт у SMM/SEO без вкладень.', track:'marketing', paid:false, cost:0}
+      ]
+    },
+    quick: {
+      key:'quick', title:'Швидкі рішення', color:'var(--amber)',
+      available: function(){ return true; },
+      options: [
+        {key:'bank', title:'Кредит у банку', badge:'≈35% річних', desc:'Береш 20 000 ₴ під ≈35% річних — і тримаєш бажану річ у руках уже сьогодні. За рік повернути доведеться ≈27 000 ₴ — переплата 7 000 ₴.', debtType:'bank', capitalDelta:-7000, reward:true},
+        {key:'mfo', title:'МФО', badge:'≈1,5%/день', desc:'Береш 20 000 ₴ у мікрокредитній організації — гроші на картці за 10 хвилин. Лише за 30 днів переплата сягає 9 000 ₴ — 29 000 ₴ загалом.', debtType:'mfo', capitalDelta:-9000, reward:true},
+        {key:'bnpl', title:'Розстрочка 0%', badge:'0%, якщо вчасно', desc:'Розстрочка від магазину на 4–6 платежів — річ уже твоя. Якщо платити вчасно — жодної переплати.', debtType:'none', capitalDelta:0, reward:true},
+        {key:'friend', title:'Позика у знайомих', badge:'без відсотків', desc:'Позичаєш у друга чи батьків — і отримуєш бажане просто зараз. Грошей у відсотках не втрачаєш, але ставиш під тиск стосунки.', debtType:'friend', capitalDelta:0, reward:true},
+        {key:'pawnshop', title:'Ломбард', badge:'≈10–15% на місяць', desc:'Гроші під заставу речі — на руках негайно. Не встиг викупити — річ втрачається назавжди.', debtType:'pawnshop', capitalDelta:-2400, reward:true},
+        {key:'pyramid', title:'Фінансова піраміда', badge:'ризик 100%', desc:'Спроба швидко подвоїти бракуючу суму замість того, щоб чесно її заробити. Жодної речі на руках просто зараз — лише обіцянка майбутнього прибутку. Ймовірність повної втрати — близько 100%.', debtType:'pyramid', capitalDelta:-18000, reward:false}
+      ]
+    },
+    entertainment: {
+      key:'entertainment', title:'Розвага', color:'var(--brick)',
+      available: function(s){ return s.capital > 0; },
+      lockedReason: 'Немає грошей на ставку',
+      options: [
+        {key:'casino', title:'Казино / слоти', desc:'Відсоток повернення 92–97% — на довгій дистанції гравець системно програє.'},
+        {key:'sports', title:'Спортивні ставки', desc:'У кожен коефіцієнт закладена маржа букмекера — очікуване значення від’ємне навіть для знавців спорту.'},
+        {key:'slots', title:'Гральні автомати', desc:'Та сама механіка слотів плюс витрачені без обліку вечори.'},
+        {key:'lootbox', title:'Лутбокси / скін-гемблінг', desc:'Реальні гроші за рандомізовані ігрові предмети, часто без перевірки віку.'},
+        {key:'lottery', title:'Миттєва лотерея', desc:'Маленькі ставки, що формують звичку частих дрібних програшів.'}
+      ]
+    }
+  };
+
+  var TOTAL_CYCLES = 3;
+
+  function freshState(){
+    return {
+      screen:'start', cycle:0, capital:START_CAPITAL,
+      hasInvested:false, hasCourse:false, courseTrack:null, coursePaid:false,
+      addiction:'none', debtType:'none', chasedLosses:false,
+      justGambledLoss:false,
+      pendingScenario:null, pendingResult:null,
+      lastChangeSnap:null, history:[], comparison:null
+    };
+  }
+  var state = load() || freshState();
+
+  function save(){ try{ localStorage.setItem('fingramm_state', JSON.stringify(state)); }catch(e){} }
+  function load(){
+    try{
+      var raw = localStorage.getItem('fingramm_state');
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      return Object.assign(freshState(), saved);
+    }catch(e){ return null; }
+  }
+  function clamp0(n){ return Math.max(0, Math.round(n)); }
+  function fmt(n){ return Math.round(n).toLocaleString('uk-UA') + ' ₴'; }
+  function rand(min,max){ return min + Math.random()*(max-min); }
+  function snapshotRelevant(s){
+    return {capital:s.capital, hasCourse:s.hasCourse, courseTrack:s.courseTrack, coursePaid:s.coursePaid, addiction:s.addiction, debtType:s.debtType};
+  }
+
+  function bumpDebt(newType){
+    if (SEVERITY.indexOf(newType) > SEVERITY.indexOf(state.debtType)) state.debtType = newType;
+  }
+  function bumpAddiction(){
+    var i = ADDICTION_ORDER.indexOf(state.addiction);
+    state.addiction = ADDICTION_ORDER[Math.min(i+1, ADDICTION_ORDER.length-1)];
+  }
+
+  function resolveInvestment(opt){
+    var rate = opt.kind === 'fixed' ? opt.rate : rand(opt.min, opt.max);
+    var before = state.capital;
+    state.capital = clamp0(state.capital * (1+rate));
+    state.hasInvested = true;
+    state.justGambledLoss = false;
+    var pct = (rate*100).toFixed(1).replace('.', ',');
+    var sign = rate >= 0 ? '+' : '';
+    return {
+      color: SCENARIOS.investment.color, title: opt.title,
+      text: opt.desc + ' Цього року результат — ' + sign + pct + '%.',
+      before: before, after: state.capital
+    };
+  }
+
+  function resolvePotential(opt){
+    var before = state.capital;
+    if (opt.paid) state.capital = clamp0(state.capital - opt.cost);
+    state.hasCourse = true;
+    state.courseTrack = opt.track;
+    state.coursePaid = opt.paid;
+    state.justGambledLoss = false;
+    var info = courseInfo[opt.track];
+    var vacancy = opt.paid ? info.paidVacancy : info.freeVacancy;
+    var salary = opt.paid ? info.paidSalary : info.freeSalary;
+    var extra = vacancy
+      ? ('Це наближає до вакансії «' + vacancy + '» ($' + salary + '/міс).')
+      : 'Це відкриває доступ до міжнародного ринку вакансій незалежно від напряму.';
+    return {
+      color: SCENARIOS.potential.color, title: opt.title,
+      text: opt.desc + ' ' + extra,
+      before: before, after: state.capital
+    };
+  }
+
+  function resolveQuick(opt){
+    var before = state.capital;
+    var chased = state.justGambledLoss && (opt.key === 'mfo' || opt.key === 'pyramid');
+    if (chased) state.chasedLosses = true;
+    state.capital = clamp0(state.capital + opt.capitalDelta);
+    bumpDebt(opt.debtType);
+    state.justGambledLoss = false;
+    var text = opt.desc;
+    if (chased) text += ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.';
+    return {
+      color: SCENARIOS.quick.color, title: opt.title,
+      text: text, before: before, after: state.capital
+    };
+  }
+
+  function resolveEntertainment(opt){
+    var before = state.capital;
+    var lossFraction = rand(0.4, 0.8);
+    state.capital = clamp0(state.capital * (1-lossFraction));
+    bumpAddiction();
+    state.justGambledLoss = true;
+    var pct = Math.round(lossFraction*100);
+    return {
+      color: SCENARIOS.entertainment.color, title: opt.title, neon:true,
+      text: opt.desc + ' Цього разу програно ' + pct + '% ставки.',
+      before: before, after: state.capital
+    };
+  }
+
+  var RESOLVERS = { investment: resolveInvestment, potential: resolvePotential, quick: resolveQuick, entertainment: resolveEntertainment };
+
+  // ---- ending template engine ----
+  function debtTraps(d){ return d === 'mfo' || d === 'pyramid'; }
+  function pickArchetype(s){
+    if (debtTraps(s.debtType)) return 'pit';
+    if (s.addiction === 'severe') return 'broken';
+    if (s.hasInvested && s.hasCourse) return 'balanced';
+    if (s.hasCourse) return 'learner';
+    if (s.hasInvested) return 'investor';
+    return 'observer';
+  }
+  var titles = {pit:'У борговій ямі', broken:'Зламаний грою', balanced:'Фінансово свідомий', learner:'Той, хто вчиться', investor:'Інвестор-початківець', observer:'Спостерігач'};
+  var titleColors = {pit:'var(--brick)', broken:'var(--brick)', balanced:'var(--emerald)', learner:'var(--indigo)', investor:'var(--emerald)', observer:'var(--amber)'};
+  var closings = {
+    pit:'Технічно вибратись можна — але це вимагає років, а не циклів, що лишились у грі.',
+    broken:'Гроші повертаються швидше, ніж час і довіра людей навколо.',
+    balanced:'Гроші й навички почали працювати одне на одного — це і є мета гри.',
+    learner:'Навички лишаються з тобою навіть тоді, коли гроші витрачені — найнадійніший актив із усіх.',
+    investor:'Ти зрозумів головне: гроші можуть працювати самі — тепер справа за звичкою.',
+    observer:'Три роки пройшли обережно, без ризику й без росту — теж вибір, і гра лишає це без засудження.'
+  };
+  function moneyLine(s, arch, capFmt){
+    if (arch === 'pit'){
+      var lender = s.debtType === 'mfo' ? 'МФО' : 'фінансовою пірамідою';
+      return 'Скільки б не назбирав за три роки — ' + capFmt + ' — усе перекриває борг перед ' + lender + ': рахунок насправді в мінусі.';
+    }
+    if (s.capital >= START_CAPITAL * 1.3) return 'Капітал виріс із 20 000 до ' + capFmt + ' ₴ — гроші справді працювали на тебе.';
+    if (s.capital >= START_CAPITAL * 0.9) return 'Капітал лишився приблизно на тому ж рівні, ' + capFmt + ' ₴: ні прориву, ні падіння.';
+    return 'Капітал просів до ' + capFmt + ' ₴ — менше, ніж було на старті.';
+  }
+  function skillLine(s, arch){
+    if (!s.hasCourse) return 'Жодного курсу за три роки — потенціал так і лишився нерозкритим.';
+    var info = courseInfo[s.courseTrack];
+    var vacancy = s.coursePaid ? info.paidVacancy : info.freeVacancy;
+    var salary = s.coursePaid ? info.paidSalary : info.freeSalary;
+    var vac = vacancy ? ('відкриває вакансію ' + vacancy + ' за $' + salary + '/міс') : 'знімає мовний бар’єр і відкриває міжнародний ринок вакансій';
+    if (arch === 'pit') return 'Курс ' + info.label + ' ' + vac + ' — але зараз ці навички не рятують від боргу.';
+    var lead = s.coursePaid
+      ? ('Платний курс ' + info.label + ' дав перевагу над іншими кандидатами: він ')
+      : ('Безкоштовний курс ' + info.label + ' був планом Б, коли на платний не вистачило грошей, і все одно ');
+    return lead + vac + '.';
+  }
+  function riskLine(s){
+    if (s.chasedLosses) return 'Найгірше — кредит узятий одразу після програшу, у спробі відігратися. Це найшвидший шлях у боргову спіраль.';
+    if (debtTraps(s.debtType)) return 'Ефективна ставка цього боргу — сотні відсотків річних: наздогнати її за час, що лишився, математично неможливо.';
+    if (s.addiction === 'severe') return 'Розваги забрали не лише гроші, а й час і, ймовірно, стосунки — цю частину втрати капітал не показує.';
+    if (s.addiction === 'mild') return 'Одна-дві спроби розваги ще не залежність, але звичка часто починається саме так.';
+    return null;
+  }
+  function buildEnding(s){
+    var arch = pickArchetype(s);
+    var capFmt = Math.round(s.capital).toLocaleString('uk-UA');
+    var lines = [moneyLine(s, arch, capFmt), skillLine(s, arch), riskLine(s), closings[arch]].filter(Boolean);
+    return { arch:arch, title:titles[arch], color:titleColors[arch], text: lines.join(' ') };
+  }
+
+  // ---- render ----
+  var app = document.getElementById('app');
+
+  function chipsRow(showDiff){
+    var addLabel = {none:'немає', mild:'легка', severe:'важка'}[state.addiction];
+    var debtLabel = {none:'немає', bank:'банк', mfo:'МФО', friend:'друзі', pyramid:'піраміда', pawnshop:'ломбард'}[state.debtType];
+    var courseLabel = state.hasCourse ? (courseInfo[state.courseTrack].label + (state.coursePaid ? ' (платно)' : ' (безкоштовно)')) : 'немає';
+    var addClass = state.addiction === 'severe' ? 'danger' : (state.addiction === 'mild' ? 'warn' : '');
+    var debtClass = debtTraps(state.debtType) ? 'danger' : (state.debtType !== 'none' ? 'warn' : '');
+
+    var capExtra = '', courseExtra = '', addExtra = '', debtExtra = '';
+    if (showDiff && state.lastChangeSnap){
+      var b = state.lastChangeSnap.before, a = state.lastChangeSnap.after;
+      if (a.capital !== b.capital){
+        var d = a.capital - b.capital;
+        capExtra = ' ' + (d >= 0 ? 'up-changed' : 'down-changed');
+      }
+      if (a.hasCourse && !b.hasCourse) courseExtra = ' up-changed';
+      if (a.addiction !== b.addiction) addExtra = ' down-changed';
+      if (a.debtType !== b.debtType) debtExtra = ' down-changed';
+    }
+
+    return '<div class="chips">' +
+      '<div class="chip' + capExtra + '">Капітал <b>' + fmt(state.capital) + '</b></div>' +
+      '<div class="chip' + courseExtra + '">Курс <b>' + courseLabel + '</b></div>' +
+      '<div class="chip ' + addClass + addExtra + '">Залежність <b>' + addLabel + '</b></div>' +
+      '<div class="chip ' + debtClass + debtExtra + '">Борг <b>' + debtLabel + '</b></div>' +
+      '</div>';
+  }
+
+  function topbar(){
+    if (state.screen === 'start') return '';
+    var label = state.screen === 'final' ? 'Фінал' : ('Рік ' + (state.cycle+1) + ' із ' + TOTAL_CYCLES);
+    return '<div class="topbar"><div class="logo">Fingramm</div><div class="cyc-badge mono">' + label + '</div></div>';
+  }
+
+  function renderStart(){
+    return '<div class="hero">' +
+      '<h1>Fingramm</h1>' +
+      '<p>Хочеш новий iPhone за ≈40 000 ₴. У тебе — рівно половина. Три роки, чотири шляхи розпорядитись грошима: «Швидкі рішення» дають бажане вже сьогодні, решта — грають на перспективу.</p>' +
+      '<div class="cap-display">Стартовий капітал: ' + fmt(START_CAPITAL) + '</div>' +
+      '<button class="btn" onclick="Fingramm.start()">Почати гру</button>' +
+      '</div>';
+  }
+
+  function changeSummary(){
+    if (!state.lastChangeSnap) return '';
+    var b = state.lastChangeSnap.before, a = state.lastChangeSnap.after;
+    var bits = [];
+    if (a.capital !== b.capital) bits.push('капітал ' + (a.capital > b.capital ? '+' : '') + fmt(a.capital - b.capital));
+    if (a.hasCourse && !b.hasCourse) bits.push('новий курс');
+    if (a.addiction !== b.addiction) bits.push('залежність → ' + ({none:'немає',mild:'легка',severe:'важка'})[a.addiction]);
+    if (a.debtType !== b.debtType) bits.push('новий борг: ' + ({none:'немає',bank:'банк',mfo:'МФО',friend:'друзі',pyramid:'піраміда',pawnshop:'ломбард'})[a.debtType]);
+    if (!bits.length) return '';
+    return '<div class="cycle-banner"><span class="tag">✓ Рік ' + state.cycle + ' завершено</span>Зміни: ' + bits.join(' · ') + '.</div>';
+  }
+
+  function renderMenu(){
+    var html = '<h2 class="screen-title">Рік ' + (state.cycle+1) + ' — обери шлях</h2>' +
+      '<p class="screen-sub">Капітал і попередні вибори визначають, що доступно зараз.</p>' +
+      changeSummary() +
+      chipsRow(true) + '<div class="grid2">';
+    ['investment','potential','quick','entertainment'].forEach(function(key){
+      var sc = SCENARIOS[key];
+      var ok = sc.available(state);
+      if (ok){
+        html += '<div class="card" style="--c:' + sc.color + '" onclick="Fingramm.openScenario(\'' + key + '\')">' +
+          '<h3>' + sc.title + '</h3><p>' + scenarioBlurb(key) + '</p></div>';
+      } else {
+        html += '<div class="card locked"><h3>' + sc.title + '</h3><p>' + scenarioBlurb(key) + '</p>' +
+          '<div class="lockmsg">🔒 ' + sc.lockedReason + '</div></div>';
+      }
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function scenarioBlurb(key){
+    return {
+      investment:'Примножити те, що є.',
+      potential:'Вкластись у навички на майбутнє.',
+      quick:'Отримати гроші зараз, заплатити пізніше.',
+      entertainment:'Спробувати виграти більше, ризикуючи всім.'
+    }[key];
+  }
+
+  function renderOptions(){
+    var sc = SCENARIOS[state.pendingScenario];
+    var html = '<h2 class="screen-title">' + sc.title + '</h2>' +
+      chipsRow() + '<div class="opt-list">';
+    sc.options.forEach(function(opt){
+      var affordable = !opt.cost || opt.cost <= state.capital;
+      if (affordable){
+        var rewardBadge = '';
+        if (state.pendingScenario === 'quick'){
+          rewardBadge = opt.reward
+            ? '<span class="reward yes">🎁 маєш бажане просто зараз</span>'
+            : '<span class="reward no">🎲 без миттєвої вигоди</span>';
+        }
+        html += '<div class="card" style="--c:' + sc.color + '" onclick="Fingramm.choose(\'' + opt.key + '\')">' +
+          '<h3>' + opt.title + '</h3><p>' + opt.desc + '</p>' +
+          (opt.badge ? '<span class="rate">' + opt.badge + '</span>' : '') +
+          rewardBadge +
+          '</div>';
+      } else {
+        html += '<div class="card locked"><h3>' + opt.title + '</h3><p>' + opt.desc + '</p>' +
+          '<div class="lockmsg">🔒 Потрібно ще ' + fmt(opt.cost - state.capital) + '</div></div>';
+      }
+    });
+    html += '</div><div class="actions"><button class="btn ghost" onclick="Fingramm.backToMenu()">← Назад</button></div>';
+    return html;
+  }
+
+  function renderConsequence(){
+    var r = state.pendingResult;
+    var delta = r.after - r.before;
+    var isLast = state.cycle >= TOTAL_CYCLES - 1;
+    var neonClass = r.neon ? ' neon' : '';
+    var html = '<div class="consequence' + neonClass + '" style="--c:' + r.color + '">' +
+      '<span class="tag">' + r.title + '</span>' +
+      '<p>' + r.text + '</p>' +
+      '<div class="delta">' + fmt(r.before) + ' → ' + fmt(r.after) +
+      ' <span class="' + (delta >= 0 ? 'up' : 'down') + '">(' + (delta >= 0 ? '+' : '') + fmt(delta).replace(' ₴','') + ' ₴)</span></div>' +
+      '</div>' +
+      '<div class="actions"><button class="btn" onclick="Fingramm.nextCycle()">' + (isLast ? 'Побачити фінал' : 'Далі →') + '</button></div>';
+    return html;
+  }
+
+  function renderFinal(){
+    var e = buildEnding(state);
+    var cmp = state.comparison || {title:'ОВДП', rate:0.16, approx:false};
+    var alt = Math.round(START_CAPITAL * Math.pow(1 + cmp.rate, TOTAL_CYCLES));
+    var diff = state.capital - alt;
+    var addFill = {none:0, mild:2, severe:4}[state.addiction];
+    var courseFill = state.hasCourse ? 4 : 0;
+    var investFill = state.hasInvested ? 4 : 0;
+    var debtFill = {none:0, friend:1, pawnshop:2, bank:2, mfo:4, pyramid:4}[state.debtType];
+
+    function meter(label, fill, color){
+      var bars = '';
+      for (var i=0;i<4;i++) bars += '<span class="bar' + (i<fill?' on':'') + '" style="--c:' + color + '"></span>';
+      return '<div class="meter"><div class="lbl">' + label + '</div><div class="bars">' + bars + '</div></div>';
+    }
+
+    return '<div class="final-card" style="--c:' + e.color + '">' +
+      '<div class="arch" style="color:' + e.color + '">' + e.title + '</div>' +
+      '<p>' + e.text + '</p>' +
+      '</div>' +
+      '<div class="state-card">' +
+        meter('Навички', courseFill, 'var(--indigo)') +
+        meter('Інвестиції', investFill, 'var(--emerald)') +
+        meter('Залежність', addFill, 'var(--brick)') +
+        meter('Борг', debtFill, 'var(--amber)') +
+      '</div>' +
+      '<div class="compare"><span class="tag">А що якби</span>Якби ці 20 000 ₴ усі три роки просто лежали в ' + cmp.title + (cmp.approx ? ' під орієнтовно ' : ' під ') + Math.round(cmp.rate*100) + '% — вийшло б ' + fmt(alt) + '. У тебе зараз ' + fmt(state.capital) +
+        ' (' + (diff>=0?'+':'') + fmt(diff) + ' до цього орієнтира).</div>' +
+      '<div class="actions"><button class="btn" onclick="Fingramm.restart()">Зіграти ще раз</button></div>';
+  }
+
+  function historyHtml(){
+    if (!state.history.length) return '';
+    var items = state.history.map(function(h){
+      var delta = h.after - h.before;
+      var deltaTxt = delta === 0 ? 'без змін капіталу' : ((delta>0?'+':'') + fmt(delta));
+      return '<div class="hist-entry" style="--c:' + h.color + '">' +
+        '<div class="hcyc">Рік ' + h.cycle + ' · ' + h.scenario + '</div>' +
+        '<div class="htitle">' + h.option + '</div>' +
+        '<div class="htext">' + h.text + '</div>' +
+        '<div class="hdelta">' + fmt(h.before) + ' → ' + fmt(h.after) + ' (' + deltaTxt + ')</div>' +
+        '</div>';
+    }).join('');
+    return '<details class="history-wrap"><summary>Історія вибору (' + state.history.length + ')</summary>' + items + '</details>';
+  }
+
+  function render(){
+    var html = topbar();
+    if (state.screen === 'start') html += renderStart();
+    else if (state.screen === 'menu') html += renderMenu();
+    else if (state.screen === 'options') html += renderOptions();
+    else if (state.screen === 'consequence') html += renderConsequence();
+    else if (state.screen === 'final') html += renderFinal();
+    if (state.screen !== 'start') html += historyHtml();
+    app.innerHTML = html;
+    save();
+  }
+
+  function pickComparison(){
+    var opt = SCENARIOS.investment.options[Math.floor(Math.random() * SCENARIOS.investment.options.length)];
+    var rate = opt.kind === 'fixed' ? opt.rate : (opt.min + opt.max) / 2;
+    return { title: opt.title, rate: rate, approx: opt.kind === 'random' };
+  }
+
+  window.Fingramm = {
+    start: function(){ state.screen = 'menu'; render(); },
+    openScenario: function(key){ state.pendingScenario = key; state.screen = 'options'; render(); },
+    backToMenu: function(){ state.pendingScenario = null; state.screen = 'menu'; render(); },
+    choose: function(optKey){
+      var sc = SCENARIOS[state.pendingScenario];
+      var opt = sc.options.filter(function(o){ return o.key === optKey; })[0];
+      var before = snapshotRelevant(state);
+      var result = RESOLVERS[state.pendingScenario](opt);
+      var after = snapshotRelevant(state);
+      state.lastChangeSnap = { before: before, after: after };
+      state.history.push({
+        cycle: state.cycle + 1, scenario: sc.title, option: opt.title,
+        text: result.text, before: result.before, after: result.after, color: result.color
+      });
+      state.pendingResult = result;
+      state.screen = 'consequence';
+      render();
+    },
+    nextCycle: function(){
+      state.cycle += 1;
+      state.pendingScenario = null; state.pendingResult = null;
+      if (state.cycle >= TOTAL_CYCLES){
+        state.comparison = pickComparison();
+        state.screen = 'final';
+      } else {
+        state.screen = 'menu';
+      }
+      render();
+    },
+    restart: function(){ state = freshState(); render(); }
+  };
+
+  render();
+})();
+</script>
