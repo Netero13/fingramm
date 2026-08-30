@@ -479,7 +479,7 @@
 
   function chipsRow(showDiff){
     var addLabel = {none:'немає', mild:'легка', severe:'важка'}[state.addiction];
-    var debtLabel = DEBT_LABELS[state.debtType];
+    var debtLabel = DEBT_LABELS[state.debtType] + (state.debtType === 'bnpl' ? ' (' + fmt(START_CAPITAL) + ')' : '');
     var courseLabel = state.hasCourse ? (courseInfo[state.courseTrack].label + (state.coursePaid ? ' (платно)' : ' (безкоштовно)')) : 'немає';
     var addClass = state.addiction === 'severe' ? 'danger' : (state.addiction === 'mild' ? 'warn' : '');
     var debtClass = debtTraps(state.debtType) ? 'danger' : (state.debtType !== 'none' ? 'warn' : '');
@@ -829,7 +829,7 @@
           state.debtType = 'none';
           state.bnplDue = false;
           var afterBnpl = snapshotRelevant(state);
-          state.lastChangeSnap = { before: beforeBnpl, after: afterBnpl };
+          state.lastChangeSnap = { before: (state.lastChangeSnap ? state.lastChangeSnap.before : beforeBnpl), after: afterBnpl };
           state.history.push({
             cycle: state.cycle, scenario: 'Швидкі рішення', option: 'Розстрочка погашена',
             text: 'Прийшов час платити за розстрочку — ' + fmt(START_CAPITAL) + ' списано з капіталу.',
