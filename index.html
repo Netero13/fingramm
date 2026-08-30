@@ -272,18 +272,8 @@
       lastChangeSnap:null, history:[], comparison:null
     };
   }
-  var state = load() || freshState();
+  var state = freshState();
   var showRestartConfirm = false;
-
-  function save(){ try{ localStorage.setItem('fingramm_state', JSON.stringify(state)); }catch(e){} }
-  function load(){
-    try{
-      var raw = localStorage.getItem('fingramm_state');
-      if (!raw) return null;
-      var saved = JSON.parse(raw);
-      return Object.assign(freshState(), saved);
-    }catch(e){ return null; }
-  }
   function clamp0(n){ return Math.max(0, Math.round(n)); }
   function fmt(n){ return Math.round(n).toLocaleString('uk-UA') + ' ₴'; }
   function rand(min,max){ return min + Math.random()*(max-min); }
@@ -717,7 +707,6 @@
     if (state.screen !== 'start') html += historyHtml();
     app.innerHTML = '<div class="screen-enter">' + html + '</div>';
     if (state.screen === 'consequence') animateDelta();
-    save();
   }
 
   function animateDelta(){
