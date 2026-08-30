@@ -207,7 +207,9 @@
     it: {label:'IT-розробки', cost:18000, freeVacancy:'Junior Developer', freeSalary:'500–900', paidVacancy:'Developer з портфоліо', paidSalary:'700–1300'},
     design: {label:'дизайну', cost:14000, freeVacancy:'UI/UX Designer (фриланс)', freeSalary:'600–1200', paidVacancy:'UI/UX Designer (штат)', paidSalary:'850–1700'},
     english: {label:'English', cost:5000, freeVacancy:null, freeSalary:null, paidVacancy:null, paidSalary:null},
-    marketing: {label:'маркетингу', cost:11000, freeVacancy:'SMM/Marketing Associate', freeSalary:'400–700', paidVacancy:'Marketing Associate (сертифікований)', paidSalary:'600–1050'}
+    marketing: {label:'маркетингу', cost:11000, freeVacancy:'SMM/Marketing Associate', freeSalary:'400–700', paidVacancy:'Marketing Associate (сертифікований)', paidSalary:'600–1050'},
+    entrepreneurship: {label:'підприємництва', cost:13000, freeVacancy:'Власна маленька справа (побічний дохід)', freeSalary:'300–700', paidVacancy:'Стартап із першими клієнтами', paidSalary:'700–1500'},
+    ai: {label:'AI-інструментів', cost:9000, freeVacancy:'Джуніор із навичками AI-інструментів', freeSalary:'450–800', paidVacancy:'Prompt Engineer / AI-консультант', paidSalary:'800–1500'}
   };
 
   var SCENARIOS = {
@@ -222,7 +224,8 @@
         {key:'ovdp', title:'ОВДП', badge:'≈16% річних', desc:'Держава позичає у тебе гроші й повертає з відсотком — найнижчий ризик на ринку.', kind:'fixed', rate:0.16},
         {key:'deposit', title:'Депозит', badge:'≈14% річних', desc:'Банк платить за те, що гроші лежать у нього. Трохи менш ризиковано за ОВДП, але банк одразу утримує податок.', kind:'fixed', rate:0.14},
         {key:'currency', title:'Валюта', badge:'без гарантії', desc:'Купівля долара/євро — не прибуток, а страховка від знецінення гривні. Наперед результат не відомий.', kind:'random', min:-0.03, max:0.12},
-        {key:'etf', title:'ETF (індексний фонд)', badge:'≈9% в середньому, волатильно', desc:'Частка одразу сотень великих світових компаній через міжнародного брокера. Прибутковіше на довгому горизонті, але рік на рік не схожий.', kind:'random', min:-0.11, max:0.29}
+        {key:'etf', title:'ETF (індексний фонд)', badge:'≈9% в середньому, волатильно', desc:'Частка одразу сотень великих світових компаній через міжнародного брокера. Прибутковіше на довгому горизонті, але рік на рік не схожий.', kind:'random', min:-0.11, max:0.29},
+        {key:'crypto', title:'Криптоактиви (BTC/ETH)', badge:'висока волатильність', desc:'Купівля топової криптовалюти через біржу. Може дати різкий злет за рік, а може забрати половину вкладеного.', kind:'random', min:-0.5, max:0.8}
       ]
     },
     potential: {
@@ -236,7 +239,11 @@
         {key:'english_paid', title:'Курс: English (платно)', badge:'5 000 ₴ · з репетитором', desc:'Індивідуальні заняття — швидший прогрес і впевненість на співбесіді.', track:'english', paid:true, cost:5000},
         {key:'english_free', title:'Курс: English (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Duolingo та безкоштовні курси. Знімає бар’єр для міжнародного ринку, але повільніше.', track:'english', paid:false, cost:0},
         {key:'marketing_paid', title:'Курс: Маркетинг (платно)', badge:'11 000 ₴ · сертифікований', desc:'Платний курс із сертифікацією, яку визнають роботодавці.', track:'marketing', paid:true, cost:11000},
-        {key:'marketing_free', title:'Курс: Маркетинг (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Google Digital Garage — швидкий старт у SMM/SEO без вкладень.', track:'marketing', paid:false, cost:0}
+        {key:'marketing_free', title:'Курс: Маркетинг (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Google Digital Garage — швидкий старт у SMM/SEO без вкладень.', track:'marketing', paid:false, cost:0},
+        {key:'entrepreneurship_paid', title:'Курс: Підприємництво (платно)', badge:'13 000 ₴ · з ментором', desc:'Менторський курс із запуску власної справи — реальний бізнес-план і перші клієнти під наглядом практика.', track:'entrepreneurship', paid:true, cost:13000},
+        {key:'entrepreneurship_free', title:'Курс: Підприємництво (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Безкоштовні курси на кшталт Prometheus «Основи підприємництва» — вчать рахувати економіку на власному прикладі, без бюджету.', track:'entrepreneurship', paid:false, cost:0},
+        {key:'ai_paid', title:'Курс: AI-інструменти (платно)', badge:'9 000 ₴ · з кейсами', desc:'Курс із практичного застосування AI-інструментів для роботи й фрилансу — з реальними кейсами й сертифікатом.', track:'ai', paid:true, cost:9000},
+        {key:'ai_free', title:'Курс: AI-інструменти (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Безкоштовні курси на кшталт Google AI Essentials — практика промптів без вкладень.', track:'ai', paid:false, cost:0}
       ]
     },
     quick: {
