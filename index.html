@@ -199,8 +199,6 @@
   var START_CAPITAL = 20000;
   var PHONE_PRICE = 40000;
   var REPAY_COST = {friend:5000, pawnshop:10000, bank:15000, mfo:25000};
-  var COURSE_INVEST_BONUS = 0.03;
-  var FREE_COURSE_SUCCESS_CHANCE = 0.55;
   var USD_UAH_RATE = 41;
   var DEBT_LABELS = {none:'немає', bnpl:'розстрочка', bank:'банк', mfo:'МФО', friend:'друзі', pyramid:'піраміда', pawnshop:'ломбард'};
 
@@ -299,7 +297,7 @@
       addiction:'none', debtType:'none', chasedLosses:false,
       justGambledLoss:false, hasPhone:false, phoneVia:null, bnplDue:false, bnplDelay:0,
       pendingScenario:null, pendingTrack:null, pendingResult:null,
-      investBonus:0, courseCycleTaken:null, potentialPayoutClaimed:false,
+      courseCycleTaken:null, potentialPayoutClaimed:false,
       lastChangeSnap:null, history:[], comparison:null
     };
   }
@@ -333,9 +331,7 @@
   }
 
   function resolveInvestment(opt){
-    var baseRate = opt.kind === 'fixed' ? opt.rate : rand(opt.min, opt.max);
-    var bonus = state.investBonus || 0;
-    var rate = baseRate + bonus;
+    var rate = opt.kind === 'fixed' ? opt.rate : rand(opt.min, opt.max);
     var before = state.capital;
     state.capital = clamp0(state.capital * (1+rate));
     state.hasInvested = true;
@@ -343,12 +339,11 @@
     var pct = (rate*100).toFixed(1).replace('.', ',');
     var sign = rate >= 0 ? '+' : '';
     var pctAbs = Math.abs(rate*100).toFixed(1).replace('.', ',');
-    var bonusNote = bonus > 0 ? (' (база ' + (baseRate>=0?'+':'') + (baseRate*100).toFixed(1).replace('.', ',') + '% + бонус навичок ' + Math.round(bonus*100) + '%)') : '';
     return {
       color: SCENARIOS.investment.color, title: opt.title,
-      text: opt.desc + ' Цього року результат — ' + sign + pct + '%' + bonusNote + '.',
+      text: opt.desc + ' Цього року результат — ' + sign + pct + '%.',
       before: before, after: state.capital,
-      calcLabel: 'капітал × (1 ' + (rate >= 0 ? '+' : '−') + ' ставка' + (bonus>0?' із бонусом навичок':'') + ') = новий капітал',
+      calcLabel: 'капітал × (1 ' + (rate >= 0 ? '+' : '−') + ' ставка) = новий капітал',
       calc: fmt(before) + ' × (1 ' + (rate >= 0 ? '+' : '−') + ' ' + pctAbs + '%) = ' + fmt(state.capital)
     };
   }
@@ -363,24 +358,15 @@
     state.potentialPayoutClaimed = false;
     state.justGambledLoss = false;
 
-    var bonusChance = opt.paid ? 1 : FREE_COURSE_SUCCESS_CHANCE;
-    var bonusHit = Math.random() < bonusChance;
-    if (bonusHit) state.investBonus = Math.max(state.investBonus || 0, COURSE_INVEST_BONUS);
-
     var info = courseInfo[opt.track];
     var vacancy = opt.paid ? info.paidVacancy : info.freeVacancy;
     var salary = opt.paid ? info.paidSalary : info.freeSalary;
     var extra = vacancy
       ? ('Це наближає до вакансії «' + vacancy + '» ($' + salary + '/міс, або ≈' + salaryUahRange(salary) + '/міс).')
       : 'Це відкриває доступ до міжнародного ринку вакансій незалежно від напряму.';
-    var bonusText = opt.paid
-      ? ' Курс під наглядом ментора — навички закріпились надійно, і тепер кожна наступна інвестиція дає трохи кращий результат.'
-      : (bonusHit
-          ? ' Матеріал вдалося довести до кінця навіть без супроводу — навички закріпились, і тепер кожна наступна інвестиція дає трохи кращий результат.'
-          : ' Без супроводу ментора запалу вистачило приблизно на половину курсу — щось лишилося, але не досить, щоб це відчутно вплинуло на подальші рішення.');
     return {
       color: SCENARIOS.potential.color, title: opt.title,
-      text: opt.desc + ' ' + extra + bonusText,
+      text: opt.desc + ' ' + extra,
       before: before, after: state.capital
     };
   }
@@ -480,12 +466,11 @@
     var vacancy = s.coursePaid ? info.paidVacancy : info.freeVacancy;
     var salary = s.coursePaid ? info.paidSalary : info.freeSalary;
     var vac = vacancy ? ('відкриває вакансію ' + vacancy + ' за $' + salary + '/міс (≈' + salaryUahRange(salary) + '/міс)') : 'знімає мовний бар’єр і відкриває міжнародний ринок вакансій';
-    var bonusNote = s.investBonus > 0 ? ' Ці самі навички ще й підняли дохідність інвестицій — курс окупився не лише вакансією.' : '';
     if (arch === 'pit') return 'Курс ' + info.label + ' ' + vac + ' — але зараз ці навички не рятують від боргу.';
     var lead = s.coursePaid
       ? ('Платний курс ' + info.label + ' дав перевагу над іншими кандидатами: він ')
       : ('Безкоштовний курс ' + info.label + ' обрав, коли на платний забракло грошей, — і все одно ');
-    return lead + vac + '.' + bonusNote;
+    return lead + vac + '.';
   }
   function phoneLine(s, arch){
     if (!s.hasPhone) return 'iPhone так і лишився мрією — ні готівки, ні рішучості взяти в борг на нього не знайшлось.';
@@ -521,7 +506,7 @@
   function chipsRow(showDiff){
     var addLabel = {none:'немає', mild:'легка', severe:'важка'}[state.addiction];
     var debtLabel = DEBT_LABELS[state.debtType] + (state.debtType === 'bnpl' ? ' (' + fmt(PHONE_PRICE) + ')' : '');
-    var courseLabel = state.hasCourse ? (courseInfo[state.courseTrack].label + (state.coursePaid ? ' (платно)' : ' (безкоштовно)') + (state.investBonus > 0 ? ' 🎯' : '')) : 'немає';
+    var courseLabel = state.hasCourse ? (courseInfo[state.courseTrack].label + (state.coursePaid ? ' (платно)' : ' (безкоштовно)')) : 'немає';
     var addClass = state.addiction === 'severe' ? 'danger' : (state.addiction === 'mild' ? 'warn' : '');
     var debtClass = debtTraps(state.debtType) ? 'danger' : (state.debtType !== 'none' ? 'warn' : '');
 
