@@ -106,6 +106,8 @@
   .card h3{font-size:1.15rem;margin-bottom:6px;color:var(--text);}
   .card p{margin:0;color:var(--text-2);font-size:0.92rem;}
   .card .rate{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--c,var(--text-2));margin-top:8px;display:block;}
+  .card .rate.paid{display:inline-block;background:var(--indigo-soft);color:var(--indigo);padding:3px 10px;border-radius:12px;font-weight:600;}
+  .card .rate.free{display:inline-block;background:var(--surface-2);color:var(--text-2);padding:3px 10px;border-radius:12px;}
   .card.locked{cursor:not-allowed;opacity:0.5;background:var(--surface-2);}
   .card.locked:hover{transform:none;}
   .card.locked .lockmsg{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;color:var(--text-2);margin-top:8px;}
@@ -620,9 +622,10 @@
             ? '<span class="reward yes">🎁 маєш бажане просто зараз</span>'
             : '<span class="reward no">🎲 без миттєвої вигоди</span>';
         }
+        var rateClass = 'rate' + (state.pendingScenario === 'potential' ? (opt.paid ? ' paid' : ' free') : '');
         html += '<div class="card" style="--c:' + sc.color + '" onclick="Fingramm.choose(\'' + opt.key + '\')">' +
           '<h3>' + opt.title + '</h3><p>' + opt.desc + '</p>' +
-          (opt.badge ? '<span class="rate">' + opt.badge + '</span>' : '') +
+          (opt.badge ? '<span class="' + rateClass + '">' + opt.badge + '</span>' : '') +
           rewardBadge +
           '</div>';
       } else {
