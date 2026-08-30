@@ -40,9 +40,18 @@
 
   #app{max-width:720px;margin:0 auto;padding:24px 20px 80px;min-height:100vh;}
 
-  .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 4px 22px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+  .topbar{padding:10px 4px 18px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+  .topbar-row{display:flex;justify-content:space-between;align-items:center;}
   .logo{font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:0.02em;}
   .cyc-badge{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;}
+
+  .progress{display:flex;gap:6px;margin-top:14px;}
+  .progress .seg{flex:1;height:6px;border-radius:3px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden;position:relative;}
+  .progress .seg.done{background:var(--emerald);border-color:var(--emerald);}
+  .progress .seg.active{background:var(--emerald);border-color:var(--emerald);opacity:0.5;}
+  .progress .seg.active::after{content:"";position:absolute;inset:0;background:var(--emerald);animation:seg-pulse 1.6s ease-in-out infinite;}
+  @keyframes seg-pulse{0%,100%{opacity:0.35;}50%{opacity:0.9;}}
+  @media (prefers-reduced-motion: reduce){.progress .seg.active::after{animation:none;opacity:0.7;}}
 
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
   .chip{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);display:flex;align-items:center;gap:6px;}
@@ -51,8 +60,9 @@
   .chip.danger{border-color:var(--brick);color:var(--brick);}
 
   .hero{text-align:center;padding:60px 10px 20px;}
-  .hero h1{font-size:3.4rem;margin-bottom:10px;}
-  .hero p{max-width:46ch;margin:0 auto 28px;color:var(--text-2);font-size:1.08rem;}
+  .hero h1{font-size:3.4rem;margin-bottom:18px;}
+  .hero .lead{max-width:42ch;margin:0 auto 12px;color:var(--text);font-size:1.28rem;font-weight:600;line-height:1.4;}
+  .hero .sub{max-width:44ch;margin:0 auto 28px;color:var(--text-2);font-size:0.98rem;}
   .cap-display{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;color:var(--emerald);margin-bottom:32px;}
 
   .btn{display:inline-block;background:var(--text);color:var(--bg);border:none;border-radius:8px;padding:14px 28px;font-size:1rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;font-family:'IBM Plex Mono',monospace;}
@@ -396,14 +406,26 @@
 
   function topbar(){
     if (state.screen === 'start') return '';
-    var label = state.screen === 'final' ? 'Фінал' : ('Рік ' + (state.cycle+1) + ' із ' + TOTAL_CYCLES);
-    return '<div class="topbar"><div class="logo">Fingramm</div><div class="cyc-badge mono">' + label + '</div></div>';
+    var isFinal = state.screen === 'final';
+    var label = isFinal ? 'Фінал' : ('Рік ' + (state.cycle+1) + ' із ' + TOTAL_CYCLES);
+    var segs = '';
+    for (var i = 0; i < TOTAL_CYCLES; i++){
+      var cls = 'seg';
+      if (i < state.cycle || isFinal) cls += ' done';
+      else if (i === state.cycle) cls += ' active';
+      segs += '<div class="' + cls + '"></div>';
+    }
+    return '<div class="topbar">' +
+      '<div class="topbar-row"><div class="logo">Fingramm</div><div class="cyc-badge mono">' + label + '</div></div>' +
+      '<div class="progress">' + segs + '</div>' +
+      '</div>';
   }
 
   function renderStart(){
     return '<div class="hero">' +
       '<h1>Fingramm</h1>' +
-      '<p>Хочеш новий iPhone за ≈40 000 ₴. У тебе — рівно половина. Три роки, чотири шляхи розпорядитись грошима: «Швидкі рішення» дають бажане вже сьогодні, решта — грають на перспективу.</p>' +
+      '<p class="lead">Хочеш новий iPhone за ≈40 000 ₴. У тебе — рівно половина.</p>' +
+      '<p class="sub">Три роки, чотири шляхи розпорядитись грошима: «Швидкі рішення» дають бажане вже сьогодні, решта — грають на перспективу.</p>' +
       '<div class="cap-display">Стартовий капітал: ' + fmt(START_CAPITAL) + '</div>' +
       '<button class="btn" onclick="Fingramm.start()">Почати гру</button>' +
       '</div>';
