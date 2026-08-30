@@ -250,6 +250,7 @@
       key:'quick', title:'Швидкі рішення', color:'var(--amber)',
       available: function(s){ return !s.hasPhone || !!REPAY_COST[s.debtType]; },
       lockedReason: function(s){
+        if (s.debtType === 'bnpl') return 'iPhone вже маєш, розстрочка спишеться сама на початку наступного року — тут більше нічого робити';
         if (s.debtType !== 'none' && !REPAY_COST[s.debtType]) return 'iPhone вже маєш, а борг перед пірамідою погасити нікому — грошей просто більше немає';
         return 'iPhone вже маєш і боргів немає — тут більше нічого робити';
       },
