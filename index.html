@@ -116,7 +116,8 @@
   .consequence h3{font-size:1.4rem;margin-bottom:12px;}
   .consequence p{margin-bottom:10px;}
   .delta{font-family:'IBM Plex Mono',monospace;font-size:1rem;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
-  .calc-detail{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);margin-top:8px;}
+  .calc-label{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--text-2);opacity:0.7;margin-top:10px;}
+  .calc-detail{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);margin-top:2px;}
   .delta .up{color:var(--emerald);}
   .delta .down{color:var(--brick);}
 
@@ -310,6 +311,7 @@
       color: SCENARIOS.investment.color, title: opt.title,
       text: opt.desc + ' Цього року результат — ' + sign + pct + '%.',
       before: before, after: state.capital,
+      calcLabel: 'капітал × (1 ' + (rate >= 0 ? '+' : '−') + ' ставка) = новий капітал',
       calc: fmt(before) + ' × (1 ' + (rate >= 0 ? '+' : '−') + ' ' + pctAbs + '%) = ' + fmt(state.capital)
     };
   }
@@ -344,21 +346,24 @@
     if (opt.reward && !state.hasPhone){ state.hasPhone = true; state.phoneVia = 'credit'; }
     var text = opt.desc;
     if (chased) text += ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.';
-    var calc = null;
+    var calc = null, calcLabel = null;
     if (opt.capitalDelta !== 0){
       var amt = Math.abs(opt.capitalDelta);
       var pct = Math.round(amt / START_CAPITAL * 100);
       if (opt.key === 'pyramid'){
+        calcLabel = 'вкладена сума × частка втрати = скільки згоріло';
         calc = fmt(START_CAPITAL) + ' × ' + pct + '% = ' + fmt(amt) + ' втрачено безповоротно';
       } else if (opt.key === 'mfo'){
+        calcLabel = 'позика × (1 + денна ставка × дні) = сума до повернення';
         calc = fmt(START_CAPITAL) + ' × (1 + 1,5% × 30 днів) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
       } else {
+        calcLabel = 'позика × (1 + ставка) = сума до повернення';
         calc = fmt(START_CAPITAL) + ' × (1 + ' + pct + '%) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
       }
     }
     return {
       color: SCENARIOS.quick.color, title: opt.title,
-      text: text, before: before, after: state.capital, calc: calc
+      text: text, before: before, after: state.capital, calc: calc, calcLabel: calcLabel
     };
   }
 
@@ -374,6 +379,7 @@
       color: SCENARIOS.entertainment.color, title: opt.title, neon:true,
       text: opt.desc + ' Цього разу програно ' + pct + '% ставки.',
       before: before, after: state.capital,
+      calcLabel: 'ставка × частка програшу = скільки втрачено',
       calc: fmt(before) + ' × ' + pctPrecise + '% = ' + fmt(before - state.capital) + ' втрачено цього разу'
     };
   }
@@ -646,7 +652,7 @@
       '<p>' + r.text + '</p>' +
       '<div class="delta">' + fmt(r.before) + ' → <span id="deltaAfterNum">' + fmt(r.before) + '</span>' +
       ' <span class="' + (delta >= 0 ? 'up' : 'down') + '">(' + (delta >= 0 ? '+' : '') + fmt(delta).replace(' ₴','') + ' ₴)</span></div>' +
-      (r.calc ? '<div class="calc-detail">↳ ' + r.calc + '</div>' : '') +
+      (r.calc ? ((r.calcLabel ? '<div class="calc-label">' + r.calcLabel + '</div>' : '') + '<div class="calc-detail">↳ ' + r.calc + '</div>') : '') +
       '</div>' +
       '<div class="actions"><button class="btn" onclick="Fingramm.nextCycle()">' + (isLast ? 'Побачити фінал' : 'Далі →') + '</button></div>';
     return html;
