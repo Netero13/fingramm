@@ -56,7 +56,6 @@
   .topbar-actions{display:flex;gap:16px;justify-content:flex-end;margin-top:10px;}
   .topbar-actions button{background:none;border:none;padding:0;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text-2);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
   .topbar-actions button:hover{color:var(--text);}
-  .early-note{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);margin-bottom:14px;}
 
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
   .chip{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);display:flex;align-items:center;gap:6px;}
@@ -229,7 +228,7 @@
       addiction:'none', debtType:'none', chasedLosses:false,
       justGambledLoss:false,
       pendingScenario:null, pendingResult:null,
-      lastChangeSnap:null, history:[], comparison:null, endedEarly:false
+      lastChangeSnap:null, history:[], comparison:null
     };
   }
   var state = load() || freshState();
@@ -423,7 +422,6 @@
     var actions = isFinal ? '' :
       '<div class="topbar-actions">' +
         '<button onclick="Fingramm.restartConfirm()">Почати спочатку</button>' +
-        '<button onclick="Fingramm.finishNow()">Завершити зараз</button>' +
       '</div>';
     return '<div class="topbar">' +
       '<div class="topbar-row"><div class="logo">Fingramm</div><div class="cyc-badge mono">' + label + '</div></div>' +
@@ -541,12 +539,7 @@
       return '<div class="meter"><div class="lbl">' + label + '</div><div class="bars">' + bars + '</div></div>';
     }
 
-    var earlyNote = state.endedEarly
-      ? '<div class="early-note">⏭ Гру завершено достроково — зіграно ' + (state.cycle+1) + ' із ' + TOTAL_CYCLES + ' років.</div>'
-      : '';
-
-    return earlyNote +
-      '<div class="final-card" style="--c:' + e.color + '">' +
+    return '<div class="final-card" style="--c:' + e.color + '">' +
       '<div class="arch" style="color:' + e.color + '">' + e.title + '</div>' +
       '<p>' + e.text + '</p>' +
       '</div>' +
@@ -628,15 +621,6 @@
     restartConfirm: function(){
       if (window.confirm('Почати гру спочатку? Поточний прогрес буде втрачено.')){
         state = freshState();
-        render();
-      }
-    },
-    finishNow: function(){
-      if (window.confirm('Завершити гру зараз і побачити результат на основі того, що вже зіграно?')){
-        state.pendingScenario = null; state.pendingResult = null;
-        state.endedEarly = true;
-        state.comparison = pickComparison();
-        state.screen = 'final';
         render();
       }
     }
