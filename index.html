@@ -362,7 +362,7 @@
     var calc = null, calcLabel = null;
     if (opt.deferred){
       calcLabel = 'розстрочка = сума до списання за рік';
-      calc = fmt(START_CAPITAL) + ' спишеться автоматично на початку наступного року';
+      calc = fmt(PHONE_PRICE) + ' (повна вартість iPhone) спишеться автоматично на початку наступного року';
     } else if (opt.capitalDelta !== 0){
       var amt = Math.abs(opt.capitalDelta);
       var pct = Math.round(amt / START_CAPITAL * 100);
@@ -479,7 +479,7 @@
 
   function chipsRow(showDiff){
     var addLabel = {none:'немає', mild:'легка', severe:'важка'}[state.addiction];
-    var debtLabel = DEBT_LABELS[state.debtType] + (state.debtType === 'bnpl' ? ' (' + fmt(START_CAPITAL) + ')' : '');
+    var debtLabel = DEBT_LABELS[state.debtType] + (state.debtType === 'bnpl' ? ' (' + fmt(PHONE_PRICE) + ')' : '');
     var courseLabel = state.hasCourse ? (courseInfo[state.courseTrack].label + (state.coursePaid ? ' (платно)' : ' (безкоштовно)')) : 'немає';
     var addClass = state.addiction === 'severe' ? 'danger' : (state.addiction === 'mild' ? 'warn' : '');
     var debtClass = debtTraps(state.debtType) ? 'danger' : (state.debtType !== 'none' ? 'warn' : '');
@@ -825,14 +825,14 @@
           state.bnplDelay -= 1;
         } else {
           var beforeBnpl = snapshotRelevant(state);
-          state.capital = clamp0(state.capital - START_CAPITAL);
+          state.capital = clamp0(state.capital - PHONE_PRICE);
           state.debtType = 'none';
           state.bnplDue = false;
           var afterBnpl = snapshotRelevant(state);
           state.lastChangeSnap = { before: (state.lastChangeSnap ? state.lastChangeSnap.before : beforeBnpl), after: afterBnpl };
           state.history.push({
             cycle: state.cycle, scenario: 'Швидкі рішення', option: 'Розстрочка погашена',
-            text: 'Прийшов час платити за розстрочку — ' + fmt(START_CAPITAL) + ' списано з капіталу.',
+            text: 'Прийшов час платити за розстрочку — ' + fmt(PHONE_PRICE) + ' списано з капіталу.',
             before: beforeBnpl.capital, after: afterBnpl.capital, color: 'var(--amber)'
           });
         }
