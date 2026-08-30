@@ -69,28 +69,6 @@
   .topbar-actions button.confirm-yes{color:var(--brick);border-color:var(--brick);}
   .topbar-actions button.confirm-no{color:var(--text-2);}
 
-  .calc-toggle{margin-top:36px;text-align:left;max-width:440px;margin-left:auto;margin-right:auto;}
-  .calc-toggle summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text-2);text-align:center;list-style:none;}
-  .calc-toggle summary::-webkit-details-marker{display:none;}
-  .calc-toggle summary:hover{color:var(--text);}
-  .calc-box{border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:20px;margin-top:16px;text-align:left;}
-  .calc-box.accent{border-left:4px solid var(--c,var(--border));}
-  .calc-section-title{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-  .calc-section-title .card-icon{width:20px;height:20px;margin-bottom:0;}
-  .calc-section-title h4{font-family:'Big Shoulders Display',sans-serif;text-transform:uppercase;font-size:1.05rem;letter-spacing:0.02em;color:var(--c,var(--text));}
-  .calc-formula{border:1px solid var(--border);border-left:3px solid var(--emerald);border-radius:8px;background:var(--emerald-soft);padding:14px 16px;margin-bottom:18px;}
-  .calc-formula .expr{font-family:'IBM Plex Mono',monospace;font-size:1.05rem;font-weight:600;color:var(--emerald);display:block;margin-bottom:6px;}
-  .calc-formula .legend{font-family:'Plus Jakarta Sans',sans-serif;font-size:0.76rem;color:var(--text-2);line-height:1.6;}
-  .calc-controls{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end;}
-  .calc-controls .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-2);margin-bottom:6px;}
-  .calc-controls .field input[type="number"]{font-family:'IBM Plex Mono',monospace;font-size:0.95rem;border:1px solid var(--border);border-radius:6px;padding:7px 9px;width:110px;background:var(--bg);color:var(--text);}
-  .calc-controls .field input[type="range"]{width:140px;accent-color:var(--emerald);}
-  .calc-tbl-wrap{overflow-x:auto;}
-  .calc-tbl{width:100%;border-collapse:collapse;font-size:0.85rem;}
-  .calc-tbl th,.calc-tbl td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--border);}
-  .calc-tbl th{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;text-transform:uppercase;color:var(--text-2);}
-  .calc-tbl td.num,.calc-tbl th.num{font-family:'IBM Plex Mono',monospace;text-align:right;font-variant-numeric:tabular-nums;}
-
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
   .chip{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);display:flex;align-items:center;gap:6px;}
   .chip b{color:var(--text);font-weight:600;}
@@ -137,7 +115,8 @@
   .consequence .tag{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--c,var(--text-2));display:block;margin-bottom:10px;}
   .consequence h3{font-size:1.4rem;margin-bottom:12px;}
   .consequence p{margin-bottom:10px;}
-  .delta{font-family:'IBM Plex Mono',monospace;font-size:1rem;margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);}
+  .delta{font-family:'IBM Plex Mono',monospace;font-size:1rem;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .calc-detail{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);margin-top:8px;}
   .delta .up{color:var(--emerald);}
   .delta .down{color:var(--brick);}
 
@@ -326,10 +305,12 @@
     state.justGambledLoss = false;
     var pct = (rate*100).toFixed(1).replace('.', ',');
     var sign = rate >= 0 ? '+' : '';
+    var pctAbs = Math.abs(rate*100).toFixed(1).replace('.', ',');
     return {
       color: SCENARIOS.investment.color, title: opt.title,
       text: opt.desc + ' Цього року результат — ' + sign + pct + '%.',
-      before: before, after: state.capital
+      before: before, after: state.capital,
+      calc: fmt(before) + ' × (1 ' + (rate >= 0 ? '+' : '−') + ' ' + pctAbs + '%) = ' + fmt(state.capital)
     };
   }
 
@@ -363,9 +344,21 @@
     if (opt.reward && !state.hasPhone){ state.hasPhone = true; state.phoneVia = 'credit'; }
     var text = opt.desc;
     if (chased) text += ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.';
+    var calc = null;
+    if (opt.capitalDelta !== 0){
+      var amt = Math.abs(opt.capitalDelta);
+      var pct = Math.round(amt / START_CAPITAL * 100);
+      if (opt.key === 'pyramid'){
+        calc = fmt(START_CAPITAL) + ' × ' + pct + '% = ' + fmt(amt) + ' втрачено безповоротно';
+      } else if (opt.key === 'mfo'){
+        calc = fmt(START_CAPITAL) + ' × (1 + 1,5% × 30 днів) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
+      } else {
+        calc = fmt(START_CAPITAL) + ' × (1 + ' + pct + '%) = ' + fmt(START_CAPITAL + amt) + ' до повернення → з капіталу списано переплату ' + fmt(amt);
+      }
+    }
     return {
       color: SCENARIOS.quick.color, title: opt.title,
-      text: text, before: before, after: state.capital
+      text: text, before: before, after: state.capital, calc: calc
     };
   }
 
@@ -376,10 +369,12 @@
     bumpAddiction();
     state.justGambledLoss = true;
     var pct = Math.round(lossFraction*100);
+    var pctPrecise = (lossFraction*100).toFixed(1).replace('.', ',');
     return {
       color: SCENARIOS.entertainment.color, title: opt.title, neon:true,
       text: opt.desc + ' Цього разу програно ' + pct + '% ставки.',
-      before: before, after: state.capital
+      before: before, after: state.capital,
+      calc: fmt(before) + ' × ' + pctPrecise + '% = ' + fmt(before - state.capital) + ' втрачено цього разу'
     };
   }
 
@@ -565,81 +560,7 @@
       '<p class="sub">Три роки, чотири шляхи розпорядитись грошима: «Швидкі рішення» дають бажане вже сьогодні, решта — грають на перспективу.</p>' +
       '<div class="cap-display">Стартовий капітал: ' + fmt(START_CAPITAL) + '</div>' +
       '<button class="btn" onclick="Fingramm.start()">Почати гру</button>' +
-      '<details class="calc-toggle"><summary>📊 Як рахує гра — спробуй сам</summary>' +
-        '<div class="calc-box accent" style="--c:var(--emerald)">' +
-          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--emerald)">' + scenarioIcon('investment') + '</span><h4>Інвестиції</h4></div>' +
-          '<div class="calc-formula">' +
-            '<span class="expr">A = P × (1 + r)ⁿ</span>' +
-            '<span class="legend">A — сума, яку отримаєш · P — сума, яку вкладаєш зараз · r — ставка за рік · n — кількість років</span>' +
-          '</div>' +
-          '<div class="calc-controls">' +
-            '<div class="field"><label for="calcSum">P — сума, ₴</label><input type="number" id="calcSum" value="20000" min="0" step="500"></div>' +
-            '<div class="field"><label for="calcYears">n — термін: <span class="mono" id="calcYearsVal">3</span> роки</label><input type="range" id="calcYears" min="1" max="10" value="3"></div>' +
-          '</div>' +
-          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Варіант</th><th class="num">r — ставка</th><th class="num">A — сума через n років</th></tr></thead><tbody id="calcBody"></tbody></table></div>' +
-          '<div class="calc-example mono" id="calcExample" style="margin-top:12px;font-size:0.78rem;color:var(--text-2);"></div>' +
-        '</div>' +
-        '<div class="calc-box accent" style="--c:var(--amber)">' +
-          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--amber)">' + scenarioIcon('quick') + '</span><h4>Швидкі рішення</h4></div>' +
-          '<div class="calc-formula" style="border-left-color:var(--amber);background:var(--amber-soft)">' +
-            '<span class="expr" style="color:var(--amber)">A = P × (1 + r × t)</span>' +
-            '<span class="legend">A — скільки повернеш · P — сума, яку береш у борг · r — ставка за період · t — кількість періодів</span>' +
-          '</div>' +
-          '<p style="font-size:0.85rem;color:var(--text-2);margin:0 0 10px">Це проста, не складна ставка — вона наростає лінійно, а не по кривій, як інвестиції. Але коли період короткий, а ставка денна, лінія все одно стає крутою:</p>' +
-          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Джерело</th><th class="num">r × t</th><th class="num">20 000 ₴ → A</th></tr></thead><tbody>' +
-            '<tr><td>Банк, 35%/рік × 1 рік</td><td class="num">35%</td><td class="num">27 000 ₴</td></tr>' +
-            '<tr><td>МФО, 1,5%/день × 30 днів</td><td class="num">45%</td><td class="num">29 000 ₴</td></tr>' +
-          '</tbody></table></div>' +
-        '</div>' +
-        '<div class="calc-box accent" style="--c:var(--brick)">' +
-          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--brick)">' + scenarioIcon('entertainment') + '</span><h4>Розвага</h4></div>' +
-          '<div class="calc-formula" style="border-left-color:var(--brick);background:var(--brick-soft)">' +
-            '<span class="expr" style="color:var(--brick)">Очікувана втрата = Ставка × (1 − RTP)</span>' +
-            '<span class="legend">RTP — відсоток повернення гравцям (≈92–97% для слотів) · Ставка — сума, яку ризикуєш за раунд</span>' +
-          '</div>' +
-          '<p style="font-size:0.85rem;color:var(--text-2);margin:0">Наприклад, при ставці 1 000 ₴ і RTP 95%: очікувана втрата ≈ 1 000 × 5% = 50 ₴ за раунд. Один раунд може виграти — але що більше раундів, то ближче фактичний підсумок до цього розрахунку.</p>' +
-        '</div>' +
-        '<div class="calc-box accent" style="--c:var(--indigo)">' +
-          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--indigo)">' + scenarioIcon('potential') + '</span><h4>Потенціал</h4></div>' +
-          '<p style="font-size:0.85rem;color:var(--text-2);margin:0 0 10px">Тут немає формули — курс не гарантує зростання капіталу день у день, тож гра рахує це не рівнянням, а правилом:</p>' +
-          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Комбінація</th><th>Наслідок</th></tr></thead><tbody>' +
-            '<tr><td>1 напрям</td><td>базова вакансія в Україні</td></tr>' +
-            '<tr><td>+ English</td><td>міжнародний ринок, ЗП ×1,5–2</td></tr>' +
-            '<tr><td>Платний курс</td><td>вища стартова пропозиція, ніж безкоштовний</td></tr>' +
-          '</tbody></table></div>' +
-        '</div>' +
-      '</details>' +
       '</div>';
-  }
-
-  function bindStartCalc(){
-    var sumEl = document.getElementById('calcSum');
-    var yrsEl = document.getElementById('calcYears');
-    if (!sumEl || !yrsEl) return;
-    var yrsVal = document.getElementById('calcYearsVal');
-    var body = document.getElementById('calcBody');
-    var example = document.getElementById('calcExample');
-    function recompute(){
-      var p = parseFloat(sumEl.value) || 0;
-      var n = parseInt(yrsEl.value, 10);
-      yrsVal.textContent = n;
-      body.innerHTML = '';
-      var first = null;
-      SCENARIOS.investment.options.forEach(function(opt, idx){
-        var rate = opt.kind === 'fixed' ? opt.rate : (opt.min + opt.max) / 2;
-        var a = p * Math.pow(1 + rate, n);
-        if (idx === 0) first = {title: opt.title, rate: rate, a: a};
-        var tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + opt.title + '</td><td class="num">' + Math.round(rate*100) + '%</td><td class="num">' + fmt(a) + '</td>';
-        body.appendChild(tr);
-      });
-      if (example && first){
-        example.textContent = '↳ приклад для «' + first.title + '»: ' + fmt(first.a) + ' = ' + fmt(p) + ' × (1 + ' + Math.round(first.rate*100) + '%)' + (n === 1 ? '' : '^' + n);
-      }
-    }
-    sumEl.addEventListener('input', recompute);
-    yrsEl.addEventListener('input', recompute);
-    recompute();
   }
 
   function changeSummary(){
@@ -725,6 +646,7 @@
       '<p>' + r.text + '</p>' +
       '<div class="delta">' + fmt(r.before) + ' → <span id="deltaAfterNum">' + fmt(r.before) + '</span>' +
       ' <span class="' + (delta >= 0 ? 'up' : 'down') + '">(' + (delta >= 0 ? '+' : '') + fmt(delta).replace(' ₴','') + ' ₴)</span></div>' +
+      (r.calc ? '<div class="calc-detail">↳ ' + r.calc + '</div>' : '') +
       '</div>' +
       '<div class="actions"><button class="btn" onclick="Fingramm.nextCycle()">' + (isLast ? 'Побачити фінал' : 'Далі →') + '</button></div>';
     return html;
@@ -786,7 +708,6 @@
     else if (state.screen === 'final') html += renderFinal();
     if (state.screen !== 'start') html += historyHtml();
     app.innerHTML = '<div class="screen-enter">' + html + '</div>';
-    if (state.screen === 'start') bindStartCalc();
     if (state.screen === 'consequence') animateDelta();
     save();
   }
