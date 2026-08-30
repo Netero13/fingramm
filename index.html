@@ -640,7 +640,9 @@
       var sc = SCENARIOS[key];
       var ok = sc.available(state);
       if (ok){
-        var payoutBadge = (key === 'potential' && canClaimPayout(state)) ? '<span class="reward yes">💼 підробіток чекає</span>' : '';
+        var payoutBadge = '';
+        if (key === 'potential' && canClaimPayout(state)) payoutBadge = '<span class="reward yes">💼 підробіток чекає</span>';
+        if (key === 'quick' && REPAY_COST[state.debtType] && state.capital >= REPAY_COST[state.debtType]) payoutBadge = '<span class="reward yes">💳 можна погасити борг</span>';
         html += '<div class="card" style="--c:' + sc.color + '" onclick="Fingramm.openScenario(\'' + key + '\')">' +
           '<span class="card-icon">' + scenarioIcon(key) + '</span>' +
           '<h3>' + sc.title + '</h3><p>' + scenarioBlurb(key) + '</p>' + payoutBadge + '</div>';
