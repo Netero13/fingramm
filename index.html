@@ -69,6 +69,9 @@
   .calc-toggle summary::-webkit-details-marker{display:none;}
   .calc-toggle summary:hover{color:var(--text);}
   .calc-box{border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:20px;margin-top:16px;}
+  .calc-formula{border:1px dashed var(--emerald);border-radius:8px;background:var(--emerald-soft);padding:12px 16px;margin-bottom:18px;}
+  .calc-formula .expr{font-family:'IBM Plex Mono',monospace;font-size:1.05rem;font-weight:600;color:var(--emerald);display:block;margin-bottom:6px;}
+  .calc-formula .legend{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text-2);line-height:1.6;}
   .calc-controls{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end;}
   .calc-controls .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-2);margin-bottom:6px;}
   .calc-controls .field input[type="number"]{font-family:'IBM Plex Mono',monospace;font-size:0.95rem;border:1px solid var(--border);border-radius:6px;padding:7px 9px;width:110px;background:var(--bg);color:var(--text);}
@@ -214,7 +217,7 @@
         {key:'ovdp', title:'ОВДП', badge:'≈16% річних', desc:'Держава позичає у тебе гроші й повертає з відсотком — найнижчий ризик на ринку.', kind:'fixed', rate:0.16},
         {key:'deposit', title:'Депозит', badge:'≈14% річних', desc:'Банк платить за те, що гроші лежать у нього. Трохи менш ризиковано за ОВДП, але банк одразу утримує податок.', kind:'fixed', rate:0.14},
         {key:'currency', title:'Валюта', badge:'без гарантії', desc:'Купівля долара/євро — не прибуток, а страховка від знецінення гривні. Наперед результат не відомий.', kind:'random', min:-0.03, max:0.12},
-        {key:'etf', title:'ETF (індексний фонд)', badge:'≈9% в середньому, волатильно', desc:'Частка одразу сотень великих світових компаній через міжнародного брокера. Прибутковіше на довгому горизонті, але рік на рік не схожий.', kind:'random', min:-0.15, max:0.25}
+        {key:'etf', title:'ETF (індексний фонд)', badge:'≈9% в середньому, волатильно', desc:'Частка одразу сотень великих світових компаній через міжнародного брокера. Прибутковіше на довгому горизонті, але рік на рік не схожий.', kind:'random', min:-0.11, max:0.29}
       ]
     },
     potential: {
@@ -524,11 +527,16 @@
       '<button class="btn" onclick="Fingramm.start()">Почати гру</button>' +
       '<details class="calc-toggle"><summary>📊 Як рахує гра — спробуй сам</summary>' +
         '<div class="calc-box">' +
-          '<div class="calc-controls">' +
-            '<div class="field"><label for="calcSum">Сума, ₴</label><input type="number" id="calcSum" value="20000" min="0" step="500"></div>' +
-            '<div class="field"><label for="calcYears">Термін: <span class="mono" id="calcYearsVal">3</span> роки</label><input type="range" id="calcYears" min="1" max="10" value="3"></div>' +
+          '<div class="calc-formula">' +
+            '<span class="expr">A = P × (1 + r)ⁿ</span>' +
+            '<span class="legend">A — сума, яку отримаєш · P — сума, яку вкладаєш зараз · r — ставка за рік · n — кількість років</span>' +
           '</div>' +
-          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Варіант</th><th class="num">Ставка</th><th class="num">Сума через N років</th></tr></thead><tbody id="calcBody"></tbody></table></div>' +
+          '<div class="calc-controls">' +
+            '<div class="field"><label for="calcSum">P — сума, ₴</label><input type="number" id="calcSum" value="20000" min="0" step="500"></div>' +
+            '<div class="field"><label for="calcYears">n — термін: <span class="mono" id="calcYearsVal">3</span> роки</label><input type="range" id="calcYears" min="1" max="10" value="3"></div>' +
+          '</div>' +
+          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Варіант</th><th class="num">r — ставка</th><th class="num">A — сума через n років</th></tr></thead><tbody id="calcBody"></tbody></table></div>' +
+          '<div class="calc-example mono" id="calcExample" style="margin-top:12px;font-size:0.78rem;color:var(--text-2);"></div>' +
         '</div>' +
       '</details>' +
       '</div>';
@@ -540,18 +548,24 @@
     if (!sumEl || !yrsEl) return;
     var yrsVal = document.getElementById('calcYearsVal');
     var body = document.getElementById('calcBody');
+    var example = document.getElementById('calcExample');
     function recompute(){
       var p = parseFloat(sumEl.value) || 0;
       var n = parseInt(yrsEl.value, 10);
       yrsVal.textContent = n;
       body.innerHTML = '';
-      SCENARIOS.investment.options.forEach(function(opt){
+      var first = null;
+      SCENARIOS.investment.options.forEach(function(opt, idx){
         var rate = opt.kind === 'fixed' ? opt.rate : (opt.min + opt.max) / 2;
         var a = p * Math.pow(1 + rate, n);
+        if (idx === 0) first = {title: opt.title, rate: rate, a: a};
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + opt.title + '</td><td class="num">' + Math.round(rate*100) + '%</td><td class="num">' + fmt(a) + '</td>';
         body.appendChild(tr);
       });
+      if (example && first){
+        example.textContent = '↳ приклад для «' + first.title + '»: ' + fmt(first.a) + ' = ' + fmt(p) + ' × (1 + ' + Math.round(first.rate*100) + '%)' + (n === 1 ? '' : '^' + n);
+      }
     }
     sumEl.addEventListener('input', recompute);
     yrsEl.addEventListener('input', recompute);
