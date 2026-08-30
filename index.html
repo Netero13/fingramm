@@ -290,6 +290,7 @@
   }
   var state = freshState();
   var showRestartConfirm = false;
+  var preChoiceState = null;
   function clamp0(n){ return Math.max(0, Math.round(n)); }
   function fmt(n){ return Math.round(n).toLocaleString('uk-UA') + ' ₴'; }
   function rand(min,max){ return min + Math.random()*(max-min); }
@@ -692,7 +693,7 @@
       (r.calc ? ((r.calcLabel ? '<div class="calc-label">' + r.calcLabel + '</div>' : '') + '<div class="calc-detail">↳ ' + r.calc + '</div>') : '') +
       (r.phoneNote ? '<div class="phone-note">' + r.phoneNote + '</div>' : '') +
       '</div>' +
-      '<div class="actions"><button class="btn" onclick="Fingramm.nextCycle()">' + (isLast ? 'Побачити фінал' : 'Далі →') + '</button></div>';
+      '<div class="actions"><button class="btn ghost" onclick="Fingramm.undoChoice()">← Назад</button><button class="btn" onclick="Fingramm.nextCycle()">' + (isLast ? 'Побачити фінал' : 'Далі →') + '</button></div>';
     return html;
   }
 
@@ -783,6 +784,7 @@
     openScenario: function(key){ state.pendingScenario = key; state.screen = 'options'; render(); },
     backToMenu: function(){ state.pendingScenario = null; state.screen = 'menu'; render(); },
     choose: function(optKey){
+      preChoiceState = JSON.parse(JSON.stringify(state));
       var sc = SCENARIOS[state.pendingScenario];
       var opt = sc.options.filter(function(o){ return o.key === optKey; })[0];
       var before = snapshotRelevant(state);
@@ -804,7 +806,17 @@
       state.screen = 'consequence';
       render();
     },
+    undoChoice: function(){
+      if (!preChoiceState) return;
+      var restored = preChoiceState;
+      restored.screen = restored.pendingScenario ? 'options' : 'menu';
+      Object.keys(state).forEach(function(k){ delete state[k]; });
+      Object.assign(state, restored);
+      preChoiceState = null;
+      render();
+    },
     nextCycle: function(){
+      preChoiceState = null;
       state.cycle += 1;
       state.pendingScenario = null; state.pendingResult = null;
       if (state.bnplDue){
@@ -832,16 +844,17 @@
       }
       render();
     },
-    restart: function(){ state = freshState(); render(); },
+    restart: function(){ preChoiceState = null; state = freshState(); render(); },
     confirmRestart: function(yes){
       if (yes === undefined){ showRestartConfirm = true; render(); return; }
       showRestartConfirm = false;
-      if (yes) state = freshState();
+      if (yes){ preChoiceState = null; state = freshState(); }
       render();
     },
     repayDebt: function(){
       var cost = REPAY_COST[state.debtType];
       if (!cost || state.capital < cost) return;
+      preChoiceState = JSON.parse(JSON.stringify(state));
       var before = snapshotRelevant(state);
       var oldDebtLabel = DEBT_LABELS[state.debtType];
       state.capital = clamp0(state.capital - cost);
