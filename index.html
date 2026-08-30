@@ -106,8 +106,8 @@
   .card h3{font-size:1.15rem;margin-bottom:6px;color:var(--text);}
   .card p{margin:0;color:var(--text-2);font-size:0.92rem;}
   .card .rate{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--c,var(--text-2));margin-top:8px;display:block;}
-  .card .rate.paid{display:inline-block;background:var(--indigo-soft);color:var(--indigo);padding:3px 10px;border-radius:12px;font-weight:600;}
-  .card .rate.free{display:inline-block;background:var(--surface-2);color:var(--text-2);padding:3px 10px;border-radius:12px;}
+  .card .rate.paid{display:inline-block;background:var(--indigo);color:var(--bg);padding:3px 10px;border-radius:12px;font-weight:700;}
+  .card .rate.free{display:inline-block;background:transparent;color:var(--text-2);padding:3px 10px;border-radius:12px;border:1px solid var(--border);}
   .card.locked{cursor:not-allowed;opacity:0.5;background:var(--surface-2);}
   .card.locked:hover{transform:none;}
   .card.locked .lockmsg{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;color:var(--text-2);margin-top:8px;}
@@ -227,13 +227,13 @@
       available: function(){ return true; },
       options: [
         {key:'it_paid', title:'Курс: IT-розробка (платно)', badge:'18 000 ₴ · пришвидшений', desc:'Приватний буткемп із менторами й портфоліо під ключ — стартова позиція суттєво сильніша.', track:'it', paid:true, cost:18000},
-        {key:'it_free', title:'Курс: IT-розробка (безкоштовно)', badge:'0 ₴ · план Б', desc:'freeCodeCamp / Prometheus — доступно з нульовим бюджетом, але довше й без гарантій.', track:'it', paid:false, cost:0},
+        {key:'it_free', title:'Курс: IT-розробка (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'freeCodeCamp / Prometheus — доступно з нульовим бюджетом, але довше й без гарантій.', track:'it', paid:false, cost:0},
         {key:'design_paid', title:'Курс: Дизайн (платно)', badge:'14 000 ₴ · пришвидшений', desc:'Курс із наставником і реальними проєктами в портфоліо.', track:'design', paid:true, cost:14000},
-        {key:'design_free', title:'Курс: Дизайн (безкоштовно)', badge:'0 ₴ · план Б', desc:'Figma, Unity Learn — основи UI/UX і геймдизайну без жодної гривні витрат.', track:'design', paid:false, cost:0},
+        {key:'design_free', title:'Курс: Дизайн (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Figma, Unity Learn — основи UI/UX і геймдизайну без жодної гривні витрат.', track:'design', paid:false, cost:0},
         {key:'english_paid', title:'Курс: English (платно)', badge:'5 000 ₴ · з репетитором', desc:'Індивідуальні заняття — швидший прогрес і впевненість на співбесіді.', track:'english', paid:true, cost:5000},
-        {key:'english_free', title:'Курс: English (безкоштовно)', badge:'0 ₴ · план Б', desc:'Duolingo та безкоштовні курси. Знімає бар’єр для міжнародного ринку, але повільніше.', track:'english', paid:false, cost:0},
+        {key:'english_free', title:'Курс: English (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Duolingo та безкоштовні курси. Знімає бар’єр для міжнародного ринку, але повільніше.', track:'english', paid:false, cost:0},
         {key:'marketing_paid', title:'Курс: Маркетинг (платно)', badge:'11 000 ₴ · сертифікований', desc:'Платний курс із сертифікацією, яку визнають роботодавці.', track:'marketing', paid:true, cost:11000},
-        {key:'marketing_free', title:'Курс: Маркетинг (безкоштовно)', badge:'0 ₴ · план Б', desc:'Google Digital Garage — швидкий старт у SMM/SEO без вкладень.', track:'marketing', paid:false, cost:0}
+        {key:'marketing_free', title:'Курс: Маркетинг (безкоштовно)', badge:'0 ₴ · довший шлях', desc:'Google Digital Garage — швидкий старт у SMM/SEO без вкладень.', track:'marketing', paid:false, cost:0}
       ]
     },
     quick: {
@@ -417,7 +417,7 @@
     if (arch === 'pit') return 'Курс ' + info.label + ' ' + vac + ' — але зараз ці навички не рятують від боргу.';
     var lead = s.coursePaid
       ? ('Платний курс ' + info.label + ' дав перевагу над іншими кандидатами: він ')
-      : ('Безкоштовний курс ' + info.label + ' був планом Б, коли на платний не вистачило грошей, і все одно ');
+      : ('Безкоштовний курс ' + info.label + ' обрав, коли на платний забракло грошей, — і все одно ');
     return lead + vac + '.';
   }
   function phoneLine(s, arch){
@@ -622,10 +622,12 @@
             ? '<span class="reward yes">🎁 маєш бажане просто зараз</span>'
             : '<span class="reward no">🎲 без миттєвої вигоди</span>';
         }
-        var rateClass = 'rate' + (state.pendingScenario === 'potential' ? (opt.paid ? ' paid' : ' free') : '');
+        var isPotential = state.pendingScenario === 'potential';
+        var rateClass = 'rate' + (isPotential ? (opt.paid ? ' paid' : ' free') : '');
+        var badgeText = isPotential && opt.paid ? '⚡ ' + opt.badge : opt.badge;
         html += '<div class="card" style="--c:' + sc.color + '" onclick="Fingramm.choose(\'' + opt.key + '\')">' +
           '<h3>' + opt.title + '</h3><p>' + opt.desc + '</p>' +
-          (opt.badge ? '<span class="' + rateClass + '">' + opt.badge + '</span>' : '') +
+          (opt.badge ? '<span class="' + rateClass + '">' + badgeText + '</span>' : '') +
           rewardBadge +
           '</div>';
       } else {
