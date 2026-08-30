@@ -68,7 +68,11 @@
   .calc-toggle summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text-2);text-align:center;list-style:none;}
   .calc-toggle summary::-webkit-details-marker{display:none;}
   .calc-toggle summary:hover{color:var(--text);}
-  .calc-box{border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:20px;margin-top:16px;}
+  .calc-box{border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:20px;margin-top:16px;text-align:left;}
+  .calc-box.accent{border-left:4px solid var(--c,var(--border));}
+  .calc-section-title{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .calc-section-title .card-icon{width:20px;height:20px;margin-bottom:0;}
+  .calc-section-title h4{font-family:'Big Shoulders Display',sans-serif;text-transform:uppercase;font-size:1.05rem;letter-spacing:0.02em;color:var(--c,var(--text));}
   .calc-formula{border:1px solid var(--border);border-left:3px solid var(--emerald);border-radius:8px;background:var(--emerald-soft);padding:14px 16px;margin-bottom:18px;}
   .calc-formula .expr{font-family:'IBM Plex Mono',monospace;font-size:1.05rem;font-weight:600;color:var(--emerald);display:block;margin-bottom:6px;}
   .calc-formula .legend{font-family:'Plus Jakarta Sans',sans-serif;font-size:0.76rem;color:var(--text-2);line-height:1.6;}
@@ -526,7 +530,8 @@
       '<div class="cap-display">Стартовий капітал: ' + fmt(START_CAPITAL) + '</div>' +
       '<button class="btn" onclick="Fingramm.start()">Почати гру</button>' +
       '<details class="calc-toggle"><summary>📊 Як рахує гра — спробуй сам</summary>' +
-        '<div class="calc-box">' +
+        '<div class="calc-box accent" style="--c:var(--emerald)">' +
+          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--emerald)">' + scenarioIcon('investment') + '</span><h4>Інвестиції</h4></div>' +
           '<div class="calc-formula">' +
             '<span class="expr">A = P × (1 + r)ⁿ</span>' +
             '<span class="legend">A — сума, яку отримаєш · P — сума, яку вкладаєш зараз · r — ставка за рік · n — кількість років</span>' +
@@ -537,6 +542,35 @@
           '</div>' +
           '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Варіант</th><th class="num">r — ставка</th><th class="num">A — сума через n років</th></tr></thead><tbody id="calcBody"></tbody></table></div>' +
           '<div class="calc-example mono" id="calcExample" style="margin-top:12px;font-size:0.78rem;color:var(--text-2);"></div>' +
+        '</div>' +
+        '<div class="calc-box accent" style="--c:var(--amber)">' +
+          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--amber)">' + scenarioIcon('quick') + '</span><h4>Швидкі рішення</h4></div>' +
+          '<div class="calc-formula" style="border-left-color:var(--amber);background:var(--amber-soft)">' +
+            '<span class="expr" style="color:var(--amber)">A = P × (1 + r × t)</span>' +
+            '<span class="legend">A — скільки повернеш · P — сума, яку береш у борг · r — ставка за період · t — кількість періодів</span>' +
+          '</div>' +
+          '<p style="font-size:0.85rem;color:var(--text-2);margin:0 0 10px">Це проста, не складна ставка — вона наростає лінійно, а не по кривій, як інвестиції. Але коли період короткий, а ставка денна, лінія все одно стає крутою:</p>' +
+          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Джерело</th><th class="num">r × t</th><th class="num">20 000 ₴ → A</th></tr></thead><tbody>' +
+            '<tr><td>Банк, 35%/рік × 1 рік</td><td class="num">35%</td><td class="num">27 000 ₴</td></tr>' +
+            '<tr><td>МФО, 1,5%/день × 30 днів</td><td class="num">45%</td><td class="num">29 000 ₴</td></tr>' +
+          '</tbody></table></div>' +
+        '</div>' +
+        '<div class="calc-box accent" style="--c:var(--brick)">' +
+          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--brick)">' + scenarioIcon('entertainment') + '</span><h4>Розвага</h4></div>' +
+          '<div class="calc-formula" style="border-left-color:var(--brick);background:var(--brick-soft)">' +
+            '<span class="expr" style="color:var(--brick)">Очікувана втрата = Ставка × (1 − RTP)</span>' +
+            '<span class="legend">RTP — відсоток повернення гравцям (≈92–97% для слотів) · Ставка — сума, яку ризикуєш за раунд</span>' +
+          '</div>' +
+          '<p style="font-size:0.85rem;color:var(--text-2);margin:0">Наприклад, при ставці 1 000 ₴ і RTP 95%: очікувана втрата ≈ 1 000 × 5% = 50 ₴ за раунд. Один раунд може виграти — але що більше раундів, то ближче фактичний підсумок до цього розрахунку.</p>' +
+        '</div>' +
+        '<div class="calc-box accent" style="--c:var(--indigo)">' +
+          '<div class="calc-section-title"><span class="card-icon" style="--c:var(--indigo)">' + scenarioIcon('potential') + '</span><h4>Потенціал</h4></div>' +
+          '<p style="font-size:0.85rem;color:var(--text-2);margin:0 0 10px">Тут немає формули — курс не гарантує зростання капіталу день у день, тож гра рахує це не рівнянням, а правилом:</p>' +
+          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Комбінація</th><th>Наслідок</th></tr></thead><tbody>' +
+            '<tr><td>1 напрям</td><td>базова вакансія в Україні</td></tr>' +
+            '<tr><td>+ English</td><td>міжнародний ринок, ЗП ×1,5–2</td></tr>' +
+            '<tr><td>Платний курс</td><td>вища стартова пропозиція, ніж безкоштовний</td></tr>' +
+          '</tbody></table></div>' +
         '</div>' +
       '</details>' +
       '</div>';
