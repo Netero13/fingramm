@@ -53,6 +53,11 @@
   @keyframes seg-pulse{0%,100%{opacity:0.35;}50%{opacity:0.9;}}
   @media (prefers-reduced-motion: reduce){.progress .seg.active::after{animation:none;opacity:0.7;}}
 
+  .topbar-actions{display:flex;gap:16px;justify-content:flex-end;margin-top:10px;}
+  .topbar-actions button{background:none;border:none;padding:0;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text-2);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+  .topbar-actions button:hover{color:var(--text);}
+  .early-note{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);margin-bottom:14px;}
+
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
   .chip{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);display:flex;align-items:center;gap:6px;}
   .chip b{color:var(--text);font-weight:600;}
@@ -224,7 +229,7 @@
       addiction:'none', debtType:'none', chasedLosses:false,
       justGambledLoss:false,
       pendingScenario:null, pendingResult:null,
-      lastChangeSnap:null, history:[], comparison:null
+      lastChangeSnap:null, history:[], comparison:null, endedEarly:false
     };
   }
   var state = load() || freshState();
@@ -337,7 +342,7 @@
     balanced:'Гроші й навички почали працювати одне на одного — це і є мета гри.',
     learner:'Навички лишаються з тобою навіть тоді, коли гроші витрачені — найнадійніший актив із усіх.',
     investor:'Ти зрозумів головне: гроші можуть працювати самі — тепер справа за звичкою.',
-    observer:'Три роки пройшли обережно, без ризику й без росту — теж вибір, і гра лишає це без засудження.'
+    observer:'Обережно, без ризику й без росту — теж вибір, і гра лишає це без засудження.'
   };
   function moneyLine(s, arch, capFmt){
     if (arch === 'pit'){
@@ -411,13 +416,19 @@
     var segs = '';
     for (var i = 0; i < TOTAL_CYCLES; i++){
       var cls = 'seg';
-      if (i < state.cycle || isFinal) cls += ' done';
-      else if (i === state.cycle) cls += ' active';
+      if (i < state.cycle) cls += ' done';
+      else if (i === state.cycle && !isFinal) cls += ' active';
       segs += '<div class="' + cls + '"></div>';
     }
+    var actions = isFinal ? '' :
+      '<div class="topbar-actions">' +
+        '<button onclick="Fingramm.restartConfirm()">Почати спочатку</button>' +
+        '<button onclick="Fingramm.finishNow()">Завершити зараз</button>' +
+      '</div>';
     return '<div class="topbar">' +
       '<div class="topbar-row"><div class="logo">Fingramm</div><div class="cyc-badge mono">' + label + '</div></div>' +
       '<div class="progress">' + segs + '</div>' +
+      actions +
       '</div>';
   }
 
@@ -530,7 +541,12 @@
       return '<div class="meter"><div class="lbl">' + label + '</div><div class="bars">' + bars + '</div></div>';
     }
 
-    return '<div class="final-card" style="--c:' + e.color + '">' +
+    var earlyNote = state.endedEarly
+      ? '<div class="early-note">⏭ Гру завершено достроково — зіграно ' + (state.cycle+1) + ' із ' + TOTAL_CYCLES + ' років.</div>'
+      : '';
+
+    return earlyNote +
+      '<div class="final-card" style="--c:' + e.color + '">' +
       '<div class="arch" style="color:' + e.color + '">' + e.title + '</div>' +
       '<p>' + e.text + '</p>' +
       '</div>' +
@@ -608,7 +624,22 @@
       }
       render();
     },
-    restart: function(){ state = freshState(); render(); }
+    restart: function(){ state = freshState(); render(); },
+    restartConfirm: function(){
+      if (window.confirm('Почати гру спочатку? Поточний прогрес буде втрачено.')){
+        state = freshState();
+        render();
+      }
+    },
+    finishNow: function(){
+      if (window.confirm('Завершити гру зараз і побачити результат на основі того, що вже зіграно?')){
+        state.pendingScenario = null; state.pendingResult = null;
+        state.endedEarly = true;
+        state.comparison = pickComparison();
+        state.screen = 'final';
+        render();
+      }
+    }
   };
 
   render();
