@@ -212,6 +212,7 @@
 (function(){
   "use strict";
   var START_CAPITAL = 20000;
+  var PHONE_PRICE = 40000;
 
   var SEVERITY = ['none','friend','pawnshop','bank','mfo','pyramid'];
   var ADDICTION_ORDER = ['none','mild','severe'];
@@ -285,7 +286,7 @@
       screen:'start', cycle:0, capital:START_CAPITAL,
       hasInvested:false, hasCourse:false, courseTrack:null, coursePaid:false,
       addiction:'none', debtType:'none', chasedLosses:false,
-      justGambledLoss:false,
+      justGambledLoss:false, hasPhone:false, phoneVia:null,
       pendingScenario:null, pendingResult:null,
       lastChangeSnap:null, history:[], comparison:null
     };
@@ -306,7 +307,7 @@
   function fmt(n){ return Math.round(n).toLocaleString('uk-UA') + ' ₴'; }
   function rand(min,max){ return min + Math.random()*(max-min); }
   function snapshotRelevant(s){
-    return {capital:s.capital, hasCourse:s.hasCourse, courseTrack:s.courseTrack, coursePaid:s.coursePaid, addiction:s.addiction, debtType:s.debtType};
+    return {capital:s.capital, hasCourse:s.hasCourse, courseTrack:s.courseTrack, coursePaid:s.coursePaid, addiction:s.addiction, debtType:s.debtType, hasPhone:s.hasPhone};
   }
 
   function bumpDebt(newType){
@@ -359,6 +360,7 @@
     state.capital = clamp0(state.capital + opt.capitalDelta);
     bumpDebt(opt.debtType);
     state.justGambledLoss = false;
+    if (opt.reward && !state.hasPhone){ state.hasPhone = true; state.phoneVia = 'credit'; }
     var text = opt.desc;
     if (chased) text += ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.';
     return {
@@ -424,6 +426,12 @@
       : ('Безкоштовний курс ' + info.label + ' був планом Б, коли на платний не вистачило грошей, і все одно ');
     return lead + vac + '.';
   }
+  function phoneLine(s, arch){
+    if (!s.hasPhone) return 'iPhone так і лишився мрією — ні готівки, ні рішучості взяти в борг на нього не знайшлось.';
+    if (s.phoneVia === 'saved') return 'iPhone у тебе в руках — і куплений за власні зароблені гроші, без жодної копійки боргу.';
+    if (arch === 'pit') return 'iPhone у тебе в руках — але саме той кредит, яким ти його оплатив, і привів до боргової ями.';
+    return 'iPhone у тебе в руках — узятий у борг ще на одному з перших кроків.';
+  }
   function riskLine(s){
     if (s.chasedLosses) return 'Найгірше — кредит узятий одразу після програшу, у спробі відігратися. Це найшвидший шлях у боргову спіраль.';
     if (debtTraps(s.debtType)) return 'Ефективна ставка цього боргу — сотні відсотків річних: наздогнати її за час, що лишився, математично неможливо.';
@@ -434,7 +442,7 @@
   function buildEnding(s){
     var arch = pickArchetype(s);
     var capFmt = Math.round(s.capital).toLocaleString('uk-UA');
-    var lines = [moneyLine(s, arch, capFmt), skillLine(s, arch), riskLine(s), closings[arch]].filter(Boolean);
+    var lines = [moneyLine(s, arch, capFmt), phoneLine(s, arch), skillLine(s, arch), riskLine(s), closings[arch]].filter(Boolean);
     return { arch:arch, title:titles[arch], color:titleColors[arch], text: lines.join(' ') };
   }
 
@@ -456,7 +464,7 @@
     var addClass = state.addiction === 'severe' ? 'danger' : (state.addiction === 'mild' ? 'warn' : '');
     var debtClass = debtTraps(state.debtType) ? 'danger' : (state.debtType !== 'none' ? 'warn' : '');
 
-    var capExtra = '', courseExtra = '', addExtra = '', debtExtra = '';
+    var capExtra = '', courseExtra = '', addExtra = '', debtExtra = '', phoneExtra = '';
     if (showDiff && state.lastChangeSnap){
       var b = state.lastChangeSnap.before, a = state.lastChangeSnap.after;
       if (a.capital !== b.capital){
@@ -466,10 +474,12 @@
       if (a.hasCourse && !b.hasCourse) courseExtra = ' up-changed';
       if (a.addiction !== b.addiction) addExtra = ' down-changed';
       if (a.debtType !== b.debtType) debtExtra = ' down-changed';
+      if (a.hasPhone && !b.hasPhone) phoneExtra = ' up-changed';
     }
 
     return '<div class="chips">' +
       '<div class="chip' + capExtra + '">Капітал <b>' + fmt(state.capital) + '</b></div>' +
+      '<div class="chip' + phoneExtra + '">📱 iPhone <b>' + (state.hasPhone ? (state.phoneVia === 'saved' ? 'куплений' : 'у борг') : 'ще ні') + '</b></div>' +
       '<div class="chip' + courseExtra + '">Курс <b>' + courseLabel + '</b></div>' +
       '<div class="chip ' + addClass + addExtra + '">Залежність <b>' + addLabel + '</b></div>' +
       '<div class="chip ' + debtClass + debtExtra + '">Борг <b>' + debtLabel + '</b></div>' +
@@ -637,6 +647,7 @@
     var b = state.lastChangeSnap.before, a = state.lastChangeSnap.after;
     var bits = [];
     if (a.capital !== b.capital) bits.push('капітал ' + (a.capital > b.capital ? '+' : '') + fmt(a.capital - b.capital));
+    if (a.hasPhone && !b.hasPhone) bits.push('📱 отримав iPhone' + (state.phoneVia === 'saved' ? ' (за готівку)' : ' (у борг)'));
     if (a.hasCourse && !b.hasCourse) bits.push('новий курс');
     if (a.addiction !== b.addiction) bits.push('залежність → ' + ({none:'немає',mild:'легка',severe:'важка'})[a.addiction]);
     if (a.debtType !== b.debtType) bits.push('новий борг: ' + ({none:'немає',bank:'банк',mfo:'МФО',friend:'друзі',pyramid:'піраміда',pawnshop:'ломбард'})[a.debtType]);
@@ -812,6 +823,7 @@
       var opt = sc.options.filter(function(o){ return o.key === optKey; })[0];
       var before = snapshotRelevant(state);
       var result = RESOLVERS[state.pendingScenario](opt);
+      if (!state.hasPhone && state.capital >= PHONE_PRICE){ state.hasPhone = true; state.phoneVia = 'saved'; }
       var after = snapshotRelevant(state);
       state.lastChangeSnap = { before: before, after: after };
       state.history.push({
