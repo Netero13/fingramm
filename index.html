@@ -252,7 +252,7 @@
         {key:'bnpl', title:'Розстрочка 0%', badge:'0%, якщо вчасно', desc:'Розстрочка від магазину на 4–6 платежів — річ уже твоя. Якщо платити вчасно — жодної переплати.', debtType:'none', capitalDelta:0, reward:true},
         {key:'friend', title:'Позика у знайомих', badge:'без відсотків', desc:'Позичаєш у друга чи батьків — і отримуєш бажане просто зараз. Грошей у відсотках не втрачаєш, але ставиш під тиск стосунки.', debtType:'friend', capitalDelta:0, reward:true},
         {key:'pawnshop', title:'Ломбард', badge:'≈10–15% на місяць', desc:'Гроші під заставу речі — на руках негайно. Не встиг викупити — річ втрачається назавжди.', debtType:'pawnshop', capitalDelta:-2400, reward:true},
-        {key:'pyramid', title:'Фінансова піраміда', badge:'ризик 100%', desc:'Спроба швидко подвоїти бракуючу суму замість того, щоб чесно її заробити. Жодної речі на руках просто зараз — лише обіцянка майбутнього прибутку. Практично все вкладене згорає безповоротно, і повернути гроші юридично неможливо.', debtType:'pyramid', capitalDelta:-18000, reward:false}
+        {key:'pyramid', title:'Подвоїти гроші за тиждень', badge:'обіцяють ×2 за тиждень', desc:'Знайомий кинув посилання на «перевірений» інвестклуб: вкладаєш зараз, за тиждень забираєш подвійну суму. Місць обмаль — кажуть, з реєстрацією треба встигнути сьогодні.', revealText:'Це виявилось фінансовою пірамідою. Гроші зникли разом з «інвестклубом» — практично все вкладене згоріло безповоротно, і повернути це юридично неможливо.', debtType:'pyramid', capitalDelta:-18000, reward:false}
       ]
     },
     entertainment: {
@@ -344,7 +344,7 @@
     bumpDebt(opt.debtType);
     state.justGambledLoss = false;
     if (opt.reward && !state.hasPhone){ state.hasPhone = true; state.phoneVia = 'credit'; }
-    var text = opt.desc;
+    var text = opt.revealText || opt.desc;
     if (chased) text += ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.';
     var calc = null, calcLabel = null;
     if (opt.capitalDelta !== 0){
