@@ -198,9 +198,9 @@
   var START_CAPITAL = 20000;
   var PHONE_PRICE = 40000;
   var REPAY_COST = {friend:5000, pawnshop:10000, bank:15000, mfo:25000};
-  var DEBT_LABELS = {none:'немає', bank:'банк', mfo:'МФО', friend:'друзі', pyramid:'піраміда', pawnshop:'ломбард'};
+  var DEBT_LABELS = {none:'немає', bnpl:'розстрочка', bank:'банк', mfo:'МФО', friend:'друзі', pyramid:'піраміда', pawnshop:'ломбард'};
 
-  var SEVERITY = ['none','friend','pawnshop','bank','mfo','pyramid'];
+  var SEVERITY = ['none','bnpl','friend','pawnshop','bank','mfo','pyramid'];
   var ADDICTION_ORDER = ['none','mild','severe'];
 
   var courseInfo = {
@@ -256,7 +256,7 @@
       options: [
         {key:'bank', title:'Кредит у банку', badge:'≈35% річних', desc:'Береш 20 000 ₴ під ≈35% річних — і тримаєш бажану річ у руках уже сьогодні. За рік повернути доведеться ≈27 000 ₴ — переплата 7 000 ₴.', debtType:'bank', capitalDelta:-7000, reward:true},
         {key:'mfo', title:'МФО', badge:'≈1,5%/день', desc:'Береш 20 000 ₴ у мікрокредитній організації — гроші на картці за 10 хвилин. Лише за 30 днів переплата сягає 9 000 ₴ — 29 000 ₴ загалом.', debtType:'mfo', capitalDelta:-9000, reward:true},
-        {key:'bnpl', title:'Розстрочка 0%', badge:'0%, якщо вчасно', desc:'Розстрочка від магазину на 4–6 платежів — річ уже твоя. Якщо платити вчасно — жодної переплати.', debtType:'none', capitalDelta:0, reward:true},
+        {key:'bnpl', title:'Розстрочка 0%', badge:'0% · погашення за рік', desc:'Розстрочка від магазину на 4–6 платежів — річ уже твоя, а решту капіталу можна одразу пустити в діло. Але за рік розстрочку доведеться погасити повністю: 0% не означає безкоштовно.', debtType:'bnpl', capitalDelta:0, reward:true, deferred:true},
         {key:'friend', title:'Позика у знайомих', badge:'без відсотків', desc:'Позичаєш у друга чи батьків — і отримуєш бажане просто зараз. Грошей у відсотках не втрачаєш, але ставиш під тиск стосунки.', debtType:'friend', capitalDelta:0, reward:true},
         {key:'pawnshop', title:'Ломбард', badge:'≈10–15% на місяць', desc:'Гроші під заставу речі — на руках негайно. Не встиг викупити — річ втрачається назавжди.', debtType:'pawnshop', capitalDelta:-2400, reward:true},
         {key:'pyramid', title:'Подвоїти гроші за тиждень', badge:'обіцяють ×2 за тиждень', desc:'Знайомий кинув посилання на «перевірений» інвестклуб: вкладаєш зараз, за тиждень забираєш подвійну суму. Місць обмаль — кажуть, з реєстрацією треба встигнути сьогодні.', revealText:'Це виявилось фінансовою пірамідою. Гроші зникли разом з «інвестклубом» — практично все вкладене згоріло безповоротно, і повернути це юридично неможливо.', debtType:'pyramid', capitalDelta:-18000, reward:false}
@@ -283,7 +283,7 @@
       screen:'start', cycle:0, capital:START_CAPITAL,
       hasInvested:false, hasCourse:false, courseTrack:null, coursePaid:false,
       addiction:'none', debtType:'none', chasedLosses:false,
-      justGambledLoss:false, hasPhone:false, phoneVia:null,
+      justGambledLoss:false, hasPhone:false, phoneVia:null, bnplDue:false, bnplDelay:0,
       pendingScenario:null, pendingResult:null,
       lastChangeSnap:null, history:[], comparison:null
     };
@@ -351,10 +351,17 @@
     bumpDebt(opt.debtType);
     state.justGambledLoss = false;
     if (opt.reward && !state.hasPhone){ state.hasPhone = true; state.phoneVia = 'credit'; }
+    if (opt.deferred){
+      state.bnplDue = true;
+      state.bnplDelay = (state.cycle >= TOTAL_CYCLES - 1) ? 0 : 1;
+    }
     var text = opt.revealText || opt.desc;
     if (chased) text += ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.';
     var calc = null, calcLabel = null;
-    if (opt.capitalDelta !== 0){
+    if (opt.deferred){
+      calcLabel = 'розстрочка = сума до списання за рік';
+      calc = fmt(START_CAPITAL) + ' спишеться автоматично на початку наступного року';
+    } else if (opt.capitalDelta !== 0){
       var amt = Math.abs(opt.capitalDelta);
       var pct = Math.round(amt / START_CAPITAL * 100);
       if (opt.key === 'pyramid'){
@@ -681,7 +688,7 @@
       '<span class="tag">' + r.title + '</span>' +
       '<p>' + r.text + '</p>' +
       '<div class="delta">' + fmt(r.before) + ' → <span id="deltaAfterNum">' + fmt(r.before) + '</span>' +
-      ' <span class="' + (delta >= 0 ? 'up' : 'down') + '">(' + (delta >= 0 ? '+' : '') + fmt(delta).replace(' ₴','') + ' ₴)</span></div>' +
+      ' <span class="' + (delta > 0 ? 'up' : (delta < 0 ? 'down' : '')) + '">(' + (delta >= 0 ? '+' : '') + fmt(delta).replace(' ₴','') + ' ₴)</span></div>' +
       (r.calc ? ((r.calcLabel ? '<div class="calc-label">' + r.calcLabel + '</div>' : '') + '<div class="calc-detail">↳ ' + r.calc + '</div>') : '') +
       (r.phoneNote ? '<div class="phone-note">' + r.phoneNote + '</div>' : '') +
       '</div>' +
@@ -800,6 +807,23 @@
     nextCycle: function(){
       state.cycle += 1;
       state.pendingScenario = null; state.pendingResult = null;
+      if (state.bnplDue){
+        if (state.bnplDelay > 0){
+          state.bnplDelay -= 1;
+        } else {
+          var beforeBnpl = snapshotRelevant(state);
+          state.capital = clamp0(state.capital - START_CAPITAL);
+          state.debtType = 'none';
+          state.bnplDue = false;
+          var afterBnpl = snapshotRelevant(state);
+          state.lastChangeSnap = { before: beforeBnpl, after: afterBnpl };
+          state.history.push({
+            cycle: state.cycle, scenario: 'Швидкі рішення', option: 'Розстрочка погашена',
+            text: 'Прийшов час платити за розстрочку — ' + fmt(START_CAPITAL) + ' списано з капіталу.',
+            before: beforeBnpl.capital, after: afterBnpl.capital, color: 'var(--amber)'
+          });
+        }
+      }
       if (state.cycle >= TOTAL_CYCLES){
         state.comparison = pickComparison();
         state.screen = 'final';
