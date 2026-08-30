@@ -9,6 +9,7 @@
     --indigo:#35507A; --indigo-soft:#E7ECF3;
     --amber:#96691D; --amber-soft:#F5ECD8;
     --brick:#A83E28; --brick-soft:#F6E5E0;
+    --grid-dot: rgba(22,33,28,0.06);
     --shadow: 0 1px 2px rgba(20,30,25,0.06), 0 8px 24px rgba(20,30,25,0.06);
   }
   @media (prefers-color-scheme: dark){
@@ -19,6 +20,7 @@
       --indigo:#8FADDE; --indigo-soft:#1E2733;
       --amber:#E3B24F; --amber-soft:#2F2A18;
       --brick:#E27757; --brick-soft:#33221C;
+      --grid-dot: rgba(235,239,233,0.05);
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 28px rgba(0,0,0,0.4);
     }
   }
@@ -29,10 +31,11 @@
     --indigo:#8FADDE; --indigo-soft:#1E2733;
     --amber:#E3B24F; --amber-soft:#2F2A18;
     --brick:#E27757; --brick-soft:#33221C;
+    --grid-dot: rgba(235,239,233,0.05);
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 28px rgba(0,0,0,0.4);
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:'Literata',Georgia,serif;line-height:1.6;min-height:100vh;}
+  body{margin:0;background-color:var(--bg);background-image:radial-gradient(var(--grid-dot) 1px, transparent 1px);background-size:22px 22px;color:var(--text);font-family:'Literata',Georgia,serif;line-height:1.6;min-height:100vh;}
   h1,h2,h3{font-family:'Big Shoulders Display','Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:0.01em;text-wrap:balance;line-height:1.05;margin:0;}
   .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
   button{font-family:inherit;cursor:pointer;}
@@ -57,6 +60,21 @@
   .topbar-actions button{background:none;border:none;padding:0;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text-2);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
   .topbar-actions button:hover{color:var(--text);}
 
+  .calc-toggle{margin-top:36px;text-align:left;max-width:440px;margin-left:auto;margin-right:auto;}
+  .calc-toggle summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;color:var(--text-2);text-align:center;list-style:none;}
+  .calc-toggle summary::-webkit-details-marker{display:none;}
+  .calc-toggle summary:hover{color:var(--text);}
+  .calc-box{border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:20px;margin-top:16px;}
+  .calc-controls{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end;}
+  .calc-controls .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.66rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-2);margin-bottom:6px;}
+  .calc-controls .field input[type="number"]{font-family:'IBM Plex Mono',monospace;font-size:0.95rem;border:1px solid var(--border);border-radius:6px;padding:7px 9px;width:110px;background:var(--bg);color:var(--text);}
+  .calc-controls .field input[type="range"]{width:140px;accent-color:var(--emerald);}
+  .calc-tbl-wrap{overflow-x:auto;}
+  .calc-tbl{width:100%;border-collapse:collapse;font-size:0.85rem;}
+  .calc-tbl th,.calc-tbl td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--border);}
+  .calc-tbl th{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;text-transform:uppercase;color:var(--text-2);}
+  .calc-tbl td.num,.calc-tbl th.num{font-family:'IBM Plex Mono',monospace;text-align:right;font-variant-numeric:tabular-nums;}
+
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
   .chip{font-family:'IBM Plex Mono',monospace;font-size:0.74rem;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);display:flex;align-items:center;gap:6px;}
   .chip b{color:var(--text);font-weight:600;}
@@ -78,6 +96,15 @@
 
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   @media (max-width:560px){.grid2{grid-template-columns:1fr;}}
+
+  .card-icon{display:inline-flex;width:26px;height:26px;color:var(--c,var(--text-2));margin-bottom:10px;}
+  .card-icon svg{width:100%;height:100%;}
+
+  .mood-badge{display:inline-flex;align-items:center;justify-content:center;color:var(--c,var(--emerald));transition:color .3s ease;}
+
+  .screen-enter{animation:screenFade .3s ease;}
+  @keyframes screenFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){.screen-enter{animation:none;}}
 
   .card{border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);padding:20px;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;border-left:4px solid var(--c, var(--border));}
   .card:hover{transform:translateY(-2px);}
@@ -170,8 +197,11 @@
   var SCENARIOS = {
     investment: {
       key:'investment', title:'Інвестиції', color:'var(--emerald)',
-      available: function(s){ return s.capital > 0; },
-      lockedReason: 'Немає капіталу для інвестування',
+      available: function(s){ return s.capital > 0 && !debtTraps(s.debtType); },
+      lockedReason: function(s){
+        if (debtTraps(s.debtType)) return (s.debtType === 'mfo' ? 'Борг перед МФО' : 'Борг перед пірамідою') + ' забирає все — спершу розберись із виплатами';
+        return 'Немає капіталу для інвестування';
+      },
       options: [
         {key:'ovdp', title:'ОВДП', badge:'≈16% річних', desc:'Держава позичає у тебе гроші й повертає з відсотком — найнижчий ризик на ринку.', kind:'fixed', rate:0.16},
         {key:'deposit', title:'Депозит', badge:'≈14% річних', desc:'Банк платить за те, що гроші лежать у нього. Трохи менш ризиковано за ОВДП, але банк одразу утримує податок.', kind:'fixed', rate:0.14},
@@ -378,6 +408,14 @@
     return { arch:arch, title:titles[arch], color:titleColors[arch], text: lines.join(' ') };
   }
 
+  function forecastLine(s, arch){
+    if (arch === 'pit') return 'За 10 років такий борг не зникає сам — щороку він лише обростає новими відсотками, якщо не взятися за виплату впритул зараз.';
+    if (arch === 'broken') return 'За 10 років звичка встигає забрати значно більше, ніж будь-яка окрема сума — час і стосунки назад не купиш.';
+    if (arch === 'observer') return 'Без ризику й без росту за 10 років лишається та сама сума, хіба зменшена інфляцією — це можна змінити одним рішучим вибором уже наступного разу.';
+    var proj = Math.round(s.capital * Math.pow(1.10, 7)).toLocaleString('uk-UA');
+    return 'Якщо капітал і далі працюватиме в такому ж темпі (умовно +10%/рік), до 10-річної позначки з моменту старту гри він міг би сягнути орієнтовно ' + proj + ' ₴.';
+  }
+
   // ---- render ----
   var app = document.getElementById('app');
 
@@ -424,10 +462,41 @@
         '<button onclick="Fingramm.restartConfirm()">Почати спочатку</button>' +
       '</div>';
     return '<div class="topbar">' +
-      '<div class="topbar-row"><div class="logo">Fingramm</div><div class="cyc-badge mono">' + label + '</div></div>' +
+      '<div class="topbar-row"><div class="logo">Fingramm</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' + moodBadge() + '<div class="cyc-badge mono">' + label + '</div></div>' +
+      '</div>' +
       '<div class="progress">' + segs + '</div>' +
       actions +
       '</div>';
+  }
+
+  function moodLevel(s){
+    if (debtTraps(s.debtType) || s.addiction === 'severe') return 'crisis';
+    if (s.addiction === 'mild' || s.debtType !== 'none') return 'stressed';
+    return 'calm';
+  }
+
+  function moodBadge(){
+    var lvl = moodLevel(state);
+    var color = lvl === 'crisis' ? 'var(--brick)' : (lvl === 'stressed' ? 'var(--amber)' : 'var(--emerald)');
+    var mouth = lvl === 'crisis' ? 'M9 16q3-3 6 0' : (lvl === 'stressed' ? 'M9 15h6' : 'M9 14q3 3 6 0');
+    var titleTxt = lvl === 'crisis' ? 'криза' : (lvl === 'stressed' ? 'напруга' : 'спокій');
+    return '<div class="mood-badge" style="--c:' + color + '" title="Стан: ' + titleTxt + '">' +
+      '<svg viewBox="0 0 24 24" width="20" height="20">' +
+        '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+        '<circle cx="9" cy="10" r="1.1" fill="currentColor"/><circle cx="15" cy="10" r="1.1" fill="currentColor"/>' +
+        '<path d="' + mouth + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+      '</svg></div>';
+  }
+
+  function scenarioIcon(key){
+    var icons = {
+      investment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>',
+      potential: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/><path d="M22 8v6"/></svg>',
+      quick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>',
+      entertainment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg>'
+    };
+    return icons[key] || '';
   }
 
   function renderStart(){
@@ -437,7 +506,40 @@
       '<p class="sub">Три роки, чотири шляхи розпорядитись грошима: «Швидкі рішення» дають бажане вже сьогодні, решта — грають на перспективу.</p>' +
       '<div class="cap-display">Стартовий капітал: ' + fmt(START_CAPITAL) + '</div>' +
       '<button class="btn" onclick="Fingramm.start()">Почати гру</button>' +
+      '<details class="calc-toggle"><summary>📊 Як рахує гра — спробуй сам</summary>' +
+        '<div class="calc-box">' +
+          '<div class="calc-controls">' +
+            '<div class="field"><label for="calcSum">Сума, ₴</label><input type="number" id="calcSum" value="20000" min="0" step="500"></div>' +
+            '<div class="field"><label for="calcYears">Термін: <span class="mono" id="calcYearsVal">3</span> роки</label><input type="range" id="calcYears" min="1" max="10" value="3"></div>' +
+          '</div>' +
+          '<div class="calc-tbl-wrap"><table class="calc-tbl"><thead><tr><th>Варіант</th><th class="num">Ставка</th><th class="num">Сума через N років</th></tr></thead><tbody id="calcBody"></tbody></table></div>' +
+        '</div>' +
+      '</details>' +
       '</div>';
+  }
+
+  function bindStartCalc(){
+    var sumEl = document.getElementById('calcSum');
+    var yrsEl = document.getElementById('calcYears');
+    if (!sumEl || !yrsEl) return;
+    var yrsVal = document.getElementById('calcYearsVal');
+    var body = document.getElementById('calcBody');
+    function recompute(){
+      var p = parseFloat(sumEl.value) || 0;
+      var n = parseInt(yrsEl.value, 10);
+      yrsVal.textContent = n;
+      body.innerHTML = '';
+      SCENARIOS.investment.options.forEach(function(opt){
+        var rate = opt.kind === 'fixed' ? opt.rate : (opt.min + opt.max) / 2;
+        var a = p * Math.pow(1 + rate, n);
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + opt.title + '</td><td class="num">' + Math.round(rate*100) + '%</td><td class="num">' + fmt(a) + '</td>';
+        body.appendChild(tr);
+      });
+    }
+    sumEl.addEventListener('input', recompute);
+    yrsEl.addEventListener('input', recompute);
+    recompute();
   }
 
   function changeSummary(){
@@ -462,10 +564,14 @@
       var ok = sc.available(state);
       if (ok){
         html += '<div class="card" style="--c:' + sc.color + '" onclick="Fingramm.openScenario(\'' + key + '\')">' +
+          '<span class="card-icon">' + scenarioIcon(key) + '</span>' +
           '<h3>' + sc.title + '</h3><p>' + scenarioBlurb(key) + '</p></div>';
       } else {
-        html += '<div class="card locked"><h3>' + sc.title + '</h3><p>' + scenarioBlurb(key) + '</p>' +
-          '<div class="lockmsg">🔒 ' + sc.lockedReason + '</div></div>';
+        var reason = typeof sc.lockedReason === 'function' ? sc.lockedReason(state) : sc.lockedReason;
+        html += '<div class="card locked">' +
+          '<span class="card-icon">' + scenarioIcon(key) + '</span>' +
+          '<h3>' + sc.title + '</h3><p>' + scenarioBlurb(key) + '</p>' +
+          '<div class="lockmsg">🔒 ' + reason + '</div></div>';
       }
     });
     html += '</div>';
@@ -516,7 +622,7 @@
     var html = '<div class="consequence' + neonClass + '" style="--c:' + r.color + '">' +
       '<span class="tag">' + r.title + '</span>' +
       '<p>' + r.text + '</p>' +
-      '<div class="delta">' + fmt(r.before) + ' → ' + fmt(r.after) +
+      '<div class="delta">' + fmt(r.before) + ' → <span id="deltaAfterNum">' + fmt(r.before) + '</span>' +
       ' <span class="' + (delta >= 0 ? 'up' : 'down') + '">(' + (delta >= 0 ? '+' : '') + fmt(delta).replace(' ₴','') + ' ₴)</span></div>' +
       '</div>' +
       '<div class="actions"><button class="btn" onclick="Fingramm.nextCycle()">' + (isLast ? 'Побачити фінал' : 'Далі →') + '</button></div>';
@@ -549,6 +655,7 @@
         meter('Залежність', addFill, 'var(--brick)') +
         meter('Борг', debtFill, 'var(--amber)') +
       '</div>' +
+      '<div class="compare"><span class="tag">Через 10 років</span>' + forecastLine(state, e.arch) + '</div>' +
       '<div class="compare"><span class="tag">А що якби</span>Якби ці 20 000 ₴ усі три роки просто лежали в ' + cmp.title + (cmp.approx ? ' під орієнтовно ' : ' під ') + Math.round(cmp.rate*100) + '% — вийшло б ' + fmt(alt) + '. У тебе зараз ' + fmt(state.capital) +
         ' (' + (diff>=0?'+':'') + fmt(diff) + ' до цього орієнтира).</div>' +
       '<div class="actions"><button class="btn" onclick="Fingramm.restart()">Зіграти ще раз</button></div>';
@@ -577,8 +684,27 @@
     else if (state.screen === 'consequence') html += renderConsequence();
     else if (state.screen === 'final') html += renderFinal();
     if (state.screen !== 'start') html += historyHtml();
-    app.innerHTML = html;
+    app.innerHTML = '<div class="screen-enter">' + html + '</div>';
+    if (state.screen === 'start') bindStartCalc();
+    if (state.screen === 'consequence') animateDelta();
     save();
+  }
+
+  function animateDelta(){
+    var el = document.getElementById('deltaAfterNum');
+    if (!el || !state.pendingResult) return;
+    var from = state.pendingResult.before, to = state.pendingResult.after;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || from === to){ el.textContent = fmt(to); return; }
+    var start = null, dur = 700;
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min(1, (ts - start) / dur);
+      el.textContent = fmt(from + (to - from) * p);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = fmt(to);
+    }
+    requestAnimationFrame(step);
   }
 
   function pickComparison(){
