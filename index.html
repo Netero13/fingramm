@@ -76,6 +76,7 @@
   .chip.danger{border-color:var(--brick);color:var(--brick);}
 
   .hero{text-align:center;padding:60px 10px 20px;}
+  .hero .kicker{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.76rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--emerald);margin-bottom:14px;}
   .hero h1{font-size:3.4rem;margin-bottom:18px;}
   .hero .lead{max-width:42ch;margin:0 auto 12px;color:var(--text);font-size:1.28rem;font-weight:600;line-height:1.4;}
   .hero .sub{max-width:44ch;margin:0 auto 28px;color:var(--text-2);font-size:0.98rem;}
@@ -561,6 +562,7 @@
   function renderStart(){
     return '<div class="hero">' +
       themeToggleHtml() +
+      '<span class="kicker">Гра з фінансової грамотності · 10–11 клас</span>' +
       '<h1>Fingramm</h1>' +
       '<p class="lead">Хочеш новий iPhone за ≈40 000 ₴. У тебе — рівно половина.</p>' +
       '<p class="sub">Три роки, чотири шляхи розпорядитись грошима: «Швидкі рішення» дають бажане вже сьогодні, решта — грають на перспективу.</p>' +
