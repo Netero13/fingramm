@@ -43,6 +43,11 @@
 
   #app{max-width:720px;margin:0 auto;padding:24px 20px 80px;min-height:100vh;}
 
+  .theme-toggle{background:var(--surface);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:0.9rem;line-height:1;flex:none;}
+  .theme-toggle:hover{border-color:var(--emerald);}
+  .hero{position:relative;}
+  .hero .theme-toggle{position:absolute;top:16px;right:10px;}
+
   .topbar{padding:10px 4px 18px;border-bottom:1px solid var(--border);margin-bottom:28px;}
   .topbar-row{display:flex;justify-content:space-between;align-items:center;}
   .logo{font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:1.3rem;letter-spacing:0.02em;}
@@ -191,6 +196,15 @@
   .hist-entry .htext{font-size:0.88rem;color:var(--text-2);}
   .hist-entry .hdelta{font-family:'IBM Plex Mono',monospace;font-size:0.82rem;margin-top:6px;}
 </style>
+
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('fingramm_theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  }catch(e){}
+})();
+</script>
 
 <div id="app"></div>
 
@@ -486,11 +500,22 @@
     );
     return '<div class="topbar">' +
       '<div class="topbar-row"><div class="logo">Fingramm</div>' +
-        '<div style="display:flex;align-items:center;gap:10px;">' + moodBadge() + '<div class="cyc-badge mono">' + label + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' + themeToggleHtml() + moodBadge() + '<div class="cyc-badge mono">' + label + '</div></div>' +
       '</div>' +
       '<div class="progress">' + segs + '</div>' +
       actions +
       '</div>';
+  }
+
+  function currentTheme(){
+    var explicit = document.documentElement.getAttribute('data-theme');
+    if (explicit === 'light' || explicit === 'dark') return explicit;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+
+  function themeToggleHtml(){
+    var icon = currentTheme() === 'dark' ? '☀️' : '🌙';
+    return '<button class="theme-toggle" onclick="Fingramm.toggleTheme()" title="Перемкнути тему" aria-label="Перемкнути тему">' + icon + '</button>';
   }
 
   function moodLevel(s){
@@ -524,6 +549,7 @@
 
   function renderStart(){
     return '<div class="hero">' +
+      themeToggleHtml() +
       '<h1>Fingramm</h1>' +
       '<p class="lead">Хочеш новий iPhone за ≈40 000 ₴. У тебе — рівно половина.</p>' +
       '<p class="sub">Три роки, чотири шляхи розпорядитись грошима: «Швидкі рішення» дають бажане вже сьогодні, решта — грають на перспективу.</p>' +
@@ -812,6 +838,12 @@
       if (yes === undefined){ showRestartConfirm = true; render(); return; }
       showRestartConfirm = false;
       if (yes) state = freshState();
+      render();
+    },
+    toggleTheme: function(){
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try{ localStorage.setItem('fingramm_theme', next); }catch(e){}
       render();
     }
   };
