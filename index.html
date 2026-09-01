@@ -122,7 +122,9 @@
   .delta{font-family:'IBM Plex Mono',monospace;font-size:1rem;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
   .calc-label{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--text-2);opacity:0.7;margin-top:10px;}
   .calc-detail{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-2);margin-top:2px;}
-  .phone-note{margin-top:12px;padding:10px 14px;background:var(--emerald-soft);border-radius:8px;color:var(--emerald);font-size:0.85rem;font-weight:600;}
+  .phone-note{margin-top:14px;padding:14px 16px;background:var(--emerald-soft);border:1px solid var(--emerald);border-radius:10px;color:var(--emerald);}
+  .phone-note .ach-tag{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;opacity:0.85;}
+  .phone-note .ach-text{font-size:0.9rem;font-weight:600;}
   .delta .up{color:var(--emerald);}
   .delta .down{color:var(--brick);}
 
@@ -527,8 +529,9 @@
       if (a.hasPhone && !b.hasPhone) phoneExtra = ' up-changed';
     }
 
+    var capText = state.hasPhone ? fmt(state.capital) : (fmt(state.capital).replace(' ₴', '') + ' / ' + fmt(PHONE_PRICE));
     return '<div class="chips">' +
-      '<div class="chip' + capExtra + '">Капітал <b>' + fmt(state.capital) + '</b></div>' +
+      '<div class="chip' + capExtra + '">Капітал <b>' + capText + '</b></div>' +
       '<div class="chip' + phoneExtra + '">📱 iPhone <b>' + (state.hasPhone ? (state.phoneVia === 'saved' ? 'куплений' : 'у борг') : 'ще ні') + '</b></div>' +
       '<div class="chip' + courseExtra + '">Курс <b>' + courseLabel + '</b></div>' +
       '<div class="chip ' + addClass + addExtra + '">Залежність <b>' + addLabel + '</b></div>' +
@@ -793,9 +796,13 @@
       return '<div class="meter"><div class="lbl">' + label + '</div><div class="bars">' + bars + '</div></div>';
     }
 
+    var totalDelta = state.capital - START_CAPITAL;
     return '<div class="final-card" style="--c:' + e.color + '">' +
       '<div class="arch" style="color:' + e.color + '">' + e.title + '</div>' +
+      '<div class="delta">' + fmt(START_CAPITAL) + ' → ' + fmt(state.capital) +
+        ' <span class="' + (totalDelta > 0 ? 'up' : (totalDelta < 0 ? 'down' : '')) + '">(' + (totalDelta >= 0 ? '+' : '') + fmt(totalDelta).replace(' ₴', '') + ' ₴)</span></div>' +
       '<p>' + e.text + '</p>' +
+      (state.phoneVia === 'saved' ? '<div class="phone-note"><span class="ach-tag">🏆 Досягнення</span><span class="ach-text">iPhone куплено повністю за власні зароблені гроші — без жодної копійки боргу.</span></div>' : '') +
       '</div>' +
       '<div class="state-card">' +
         meter('Навички', courseFill, 'var(--indigo)') +
@@ -896,7 +903,7 @@
         var capBeforePurchase = state.capital;
         state.capital = clamp0(state.capital - PHONE_PRICE);
         state.hasPhone = true; state.phoneVia = 'saved';
-        result.phoneNote = '🎉 Назбирав достатньо для iPhone за готівку — ' + fmt(PHONE_PRICE) + ' списано: ' + fmt(capBeforePurchase) + ' → ' + fmt(state.capital) + '.';
+        result.phoneNote = '<span class="ach-tag">🏆 Досягнення розблоковано</span><span class="ach-text">Назбирав на iPhone самостійно — ' + fmt(PHONE_PRICE) + ' списано: ' + fmt(capBeforePurchase) + ' → ' + fmt(state.capital) + '.</span>';
       }
       var after = snapshotRelevant(state);
       state.lastChangeSnap = { before: before, after: after };
