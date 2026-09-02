@@ -125,6 +125,9 @@
   .phone-note{margin-top:14px;padding:14px 16px;background:var(--emerald-soft);border:1px solid var(--emerald);border-radius:10px;color:var(--emerald);}
   .phone-note .ach-tag{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;opacity:0.85;}
   .phone-note .ach-text{font-size:0.9rem;font-weight:600;}
+  .gamble-warn{margin-bottom:20px;padding:14px 16px;background:var(--brick-soft);border:1px solid var(--brick);border-radius:10px;color:var(--brick);}
+  .gamble-warn .tag{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;opacity:0.9;}
+  .gamble-warn .txt{font-size:0.9rem;font-weight:600;}
   .delta .up{color:var(--emerald);}
   .delta .down{color:var(--brick);}
 
@@ -760,7 +763,7 @@
     var sc = SCENARIOS[state.pendingScenario];
     var phoneDone = state.pendingScenario === 'quick' && state.hasPhone;
     var gambleWarn = (state.pendingScenario === 'entertainment' && state.gamblingVisits > 0)
-      ? '<div class="cycle-banner" style="border-left-color:var(--brick)"><span class="tag" style="color:var(--brick)">⚠ Заход №' + (state.gamblingVisits + 1) + '</span>Ти вже був(-ла) тут ' + state.gamblingVisits + ' ' + timesWord(state.gamblingVisits) + ' — шанси гірші, ніж уперше.</div>'
+      ? '<div class="gamble-warn"><span class="tag">⚠ Заход №' + (state.gamblingVisits + 1) + '</span><span class="txt">Ти вже був(-ла) тут ' + state.gamblingVisits + ' ' + timesWord(state.gamblingVisits) + ' — шанси гірші, ніж уперше.</span></div>'
       : '';
     var html = '<h2 class="screen-title">' + sc.title + '</h2>' +
       chipsRow() +
