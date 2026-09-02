@@ -297,7 +297,7 @@
       screen:'start', cycle:0, capital:START_CAPITAL,
       hasInvested:false, hasCourse:false, courseTrack:null, coursePaid:false,
       addiction:'none', debtType:'none', chasedLosses:false,
-      justGambledLoss:false, hasPhone:false, phoneVia:null, bnplDue:false, bnplDelay:0,
+      justGambledLoss:false, gamblingVisits:0, hasPhone:false, phoneVia:null, bnplDue:false, bnplDelay:0,
       pendingScenario:null, pendingTrack:null, pendingResult:null,
       courseCycleTaken:null, potentialPayoutClaimed:false,
       lastChangeSnap:null, history:[], comparison:null
@@ -319,6 +319,11 @@
     var lo = usdToUah(parseInt(parts[0], 10));
     var hi = usdToUah(parseInt(parts[1], 10));
     return lo.toLocaleString('uk-UA') + '–' + hi.toLocaleString('uk-UA') + ' ₴';
+  }
+  function timesWord(n){
+    if (n === 1) return 'раз';
+    if (n >= 2 && n <= 4) return 'рази';
+    return 'разів';
   }
   function canClaimPayout(s){
     return s.hasCourse && !s.potentialPayoutClaimed && s.cycle > s.courseCycleTaken && s.cycle < TOTAL_CYCLES;
@@ -421,17 +426,24 @@
     };
   }
 
+  var GAMBLING_LOSS_TIERS = [[0.35,0.75], [0.50,0.85], [0.65,0.95]];
+
   function resolveEntertainment(opt){
     var before = state.capital;
-    var lossFraction = rand(0.4, 0.8);
+    var tier = GAMBLING_LOSS_TIERS[Math.min(state.gamblingVisits, GAMBLING_LOSS_TIERS.length - 1)];
+    var lossFraction = rand(tier[0], tier[1]);
     state.capital = clamp0(state.capital * (1-lossFraction));
     bumpAddiction();
     state.justGambledLoss = true;
+    state.gamblingVisits += 1;
     var pct = Math.round(lossFraction*100);
     var pctPrecise = (lossFraction*100).toFixed(1).replace('.', ',');
+    var escalationNote = '';
+    if (state.gamblingVisits === 2) escalationNote = ' Другий заход поспіль — і цього разу програш відчутно більший.';
+    else if (state.gamblingVisits >= 3) escalationNote = ' Це вже ' + state.gamblingVisits + '-й заход — шанси щоразу гірші.';
     return {
       color: SCENARIOS.entertainment.color, title: opt.title, neon:true,
-      text: opt.desc + ' Цього разу програно ' + pct + '% ставки.',
+      text: opt.desc + ' Цього разу програно ' + pct + '% ставки.' + escalationNote,
       before: before, after: state.capital,
       calcLabel: 'ставка × частка програшу = скільки втрачено',
       calc: fmt(before) + ' × ' + pctPrecise + '% = ' + fmt(before - state.capital) + ' втрачено цього разу'
@@ -747,9 +759,13 @@
     }
     var sc = SCENARIOS[state.pendingScenario];
     var phoneDone = state.pendingScenario === 'quick' && state.hasPhone;
+    var gambleWarn = (state.pendingScenario === 'entertainment' && state.gamblingVisits > 0)
+      ? '<div class="cycle-banner" style="border-left-color:var(--brick)"><span class="tag" style="color:var(--brick)">⚠ Заход №' + (state.gamblingVisits + 1) + '</span>Ти вже був(-ла) тут ' + state.gamblingVisits + ' ' + timesWord(state.gamblingVisits) + ' — шанси гірші, ніж уперше.</div>'
+      : '';
     var html = '<h2 class="screen-title">' + sc.title + '</h2>' +
       chipsRow() +
       (phoneDone ? '<p class="screen-sub">iPhone вже маєш — лишилось тільки розрахуватися з боргом.</p>' : '') +
+      gambleWarn +
       '<div class="opt-list">';
     sc.options.forEach(function(opt){
       if (phoneDone) return;
