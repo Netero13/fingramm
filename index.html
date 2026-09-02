@@ -55,7 +55,7 @@
 
   .progress{display:flex;gap:6px;margin-top:14px;}
   .progress .seg{flex:1;height:6px;border-radius:3px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden;position:relative;}
-  .progress .seg.done{background:var(--emerald);border-color:var(--emerald);}
+  .progress .seg.done{background:var(--c,var(--emerald));border-color:var(--c,var(--emerald));}
   .progress .seg.active{background:var(--emerald);border-color:var(--emerald);opacity:0.5;}
   .progress .seg.active::after{content:"";position:absolute;inset:0;background:var(--emerald);animation:seg-pulse 1.6s ease-in-out infinite;}
   @keyframes seg-pulse{0%,100%{opacity:0.35;}50%{opacity:0.9;}}
@@ -565,9 +565,14 @@
     var segs = '';
     for (var i = 0; i < TOTAL_CYCLES; i++){
       var cls = 'seg';
-      if (i < state.cycle) cls += ' done';
+      var segColor = '';
+      if (i < state.cycle){
+        cls += ' done';
+        var segHist = state.history.filter(function(h){ return h.cycle === i + 1; });
+        if (segHist.length) segColor = ' style="--c:' + segHist[0].color + '"';
+      }
       else if (i === state.cycle && !isFinal) cls += ' active';
-      segs += '<div class="' + cls + '"></div>';
+      segs += '<div class="' + cls + '"' + segColor + '></div>';
     }
     var actions = isFinal ? '' : (
       showRestartConfirm ?
