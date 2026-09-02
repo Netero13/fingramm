@@ -366,16 +366,19 @@
     var extra = vacancy
       ? ('Це наближає до вакансії «' + vacancy + '» ($' + salary + '/міс, або ≈' + salaryUahRange(salary) + '/міс).')
       : 'Це відкриває доступ до міжнародного ринку вакансій незалежно від напряму.';
+    var lastYearNote = (state.cycle >= TOTAL_CYCLES - 1)
+      ? ' Курс пройдено в останній рік гри — часу забрати підробіток за фахом уже не залишиться, але сама навичка нікуди не дінеться.'
+      : '';
     return {
       color: SCENARIOS.potential.color, title: opt.title,
-      text: opt.desc + ' ' + extra,
+      text: opt.desc + ' ' + extra + lastYearNote,
       before: before, after: state.capital
     };
   }
 
   function resolveQuick(opt){
     var before = state.capital;
-    var chased = state.justGambledLoss && (opt.key === 'mfo' || opt.key === 'pyramid');
+    var chased = state.justGambledLoss;
     if (chased) state.chasedLosses = true;
     state.capital = clamp0(state.capital + opt.capitalDelta);
     bumpDebt(opt.debtType);
@@ -386,7 +389,11 @@
       state.bnplDelay = (state.cycle >= TOTAL_CYCLES - 1) ? 0 : 1;
     }
     var text = opt.revealText || opt.desc;
-    if (chased) text += ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.';
+    if (chased){
+      text += (opt.key === 'mfo' || opt.key === 'pyramid')
+        ? ' Це рішення прийняте одразу після програшу в розвазі — спроба відігратися, і саме так починається боргова спіраль.'
+        : ' Це рішення прийняте одразу після програшу в розвазі — початок небезпечного циклу «програв → позичив → спробував відіграти знову».';
+    }
     var calc = null, calcLabel = null;
     if (opt.deferred){
       calcLabel = 'розстрочка = сума до списання за рік';
@@ -438,19 +445,22 @@
   function pickArchetype(s){
     if (debtTraps(s.debtType)) return 'pit';
     if (s.addiction === 'severe') return 'broken';
-    if (s.hasInvested && s.hasCourse) return 'balanced';
+    var soundResult = s.capital >= START_CAPITAL * 0.9;
+    if (s.hasCourse && s.hasInvested && soundResult) return 'balanced';
     if (s.hasCourse) return 'learner';
-    if (s.hasInvested) return 'investor';
+    if (s.hasInvested && soundResult) return 'investor';
+    if (s.hasInvested) return 'risky';
     return 'observer';
   }
-  var titles = {pit:'У борговій ямі', broken:'Зламаний грою', balanced:'Фінансово свідомий', learner:'Той, хто вчиться', investor:'Інвестор-початківець', observer:'Спостерігач'};
-  var titleColors = {pit:'var(--brick)', broken:'var(--brick)', balanced:'var(--emerald)', learner:'var(--indigo)', investor:'var(--emerald)', observer:'var(--amber)'};
+  var titles = {pit:'У борговій ямі', broken:'Зламаний грою', balanced:'Фінансово свідомий', learner:'Той, хто вчиться', investor:'Інвестор-початківець', risky:'Ризикнув і програв', observer:'Спостерігач'};
+  var titleColors = {pit:'var(--brick)', broken:'var(--brick)', balanced:'var(--emerald)', learner:'var(--indigo)', investor:'var(--emerald)', risky:'var(--amber)', observer:'var(--amber)'};
   var closings = {
     pit:'Технічно вибратись можна — але це вимагає років, а не циклів, що лишились у грі.',
     broken:'Гроші повертаються швидше, ніж час і довіра людей навколо.',
     balanced:'Гроші й навички почали працювати одне на одного — це і є мета гри.',
     learner:'Навички лишаються з тобою навіть тоді, коли гроші витрачені — найнадійніший актив із усіх.',
     investor:'Ти зрозумів головне: гроші можуть працювати самі — тепер справа за звичкою.',
+    risky:'Ризик — нормальна частина інвестування, і цього разу він не спрацював. Розподілені між кількома менш ризикованими інструментами гроші захистили б капітал краще, ніж ставка на щось одне.',
     observer:'Обережно, без ризику й без росту — теж вибір, і гра лишає це без засудження.'
   };
   function moneyLine(s, arch, capFmt){
@@ -502,7 +512,16 @@
     if (arch === 'pit') return 'За 10 років такий борг не зникає сам — щороку він лише обростає новими відсотками, якщо не взятися за виплату впритул зараз.';
     if (arch === 'broken') return 'За 10 років звичка встигає забрати значно більше, ніж будь-яка окрема сума — час і стосунки назад не купиш.';
     if (arch === 'observer') return 'Без ризику й без росту за 10 років лишається та сама сума, хіба зменшена інфляцією — це можна змінити одним рішучим вибором уже наступного разу.';
+    if (arch === 'risky') return 'Одна невдала ставка ще не кінець історії — але повторення того самого ризику без диверсифікації за 10 років могло б і поглибити просідання. Розподілені між кількома менш ризикованими інструментами гроші дали б стабільніший результат.';
+    if (arch === 'learner'){
+      var info = courseInfo[s.courseTrack];
+      var vac = s.coursePaid ? info.paidVacancy : info.freeVacancy;
+      return (vac ? ('Навички відкривають шлях до доходу від вакансії «' + vac + '»') : 'Навички відкривають міжнародний ринок вакансій') +
+        ', але капітал, який просто лежить без діла, за 10 років радше просяде під інфляцією, ніж виросте.';
+    }
     var proj = Math.round(s.capital * Math.pow(1.10, 7)).toLocaleString('uk-UA');
+    if (arch === 'investor') return 'Якщо капітал і далі працюватиме в такому ж темпі (умовно +10%/рік), до 10-річної позначки він міг би сягнути орієнтовно ' + proj + ' ₴. Але без розвитку навичок поповнювати цей капітал новими надходженнями буде складніше.';
+    if (arch === 'balanced') return 'Капітал і навички працюють одне на одного: якщо темп збережеться (умовно +10%/рік), а дохід від навичок регулярно підживлює інвестиції, до 10-річної позначки можна орієнтовно перевищити ' + proj + ' ₴.';
     return 'Якщо капітал і далі працюватиме в такому ж темпі (умовно +10%/рік), до 10-річної позначки з моменту старту гри він міг би сягнути орієнтовно ' + proj + ' ₴.';
   }
 
@@ -786,8 +805,11 @@
     var alt = Math.round(START_CAPITAL * Math.pow(1 + cmp.rate, TOTAL_CYCLES));
     var diff = state.capital - alt;
     var addFill = {none:0, mild:2, severe:4}[state.addiction];
-    var courseFill = state.hasCourse ? 4 : 0;
-    var investFill = state.hasInvested ? 4 : 0;
+    var courseFill = !state.hasCourse ? 0 : (state.potentialPayoutClaimed ? 4 : (state.coursePaid ? 3 : 2));
+    var investFill = 0;
+    if (state.hasInvested){
+      investFill = state.capital >= START_CAPITAL * 1.3 ? 4 : (state.capital >= START_CAPITAL * 0.9 ? 3 : 1);
+    }
     var debtFill = {none:0, friend:1, pawnshop:2, bank:2, mfo:4, pyramid:4}[state.debtType];
 
     function meter(label, fill, color){
@@ -797,10 +819,16 @@
     }
 
     var totalDelta = state.capital - START_CAPITAL;
+    var debtNote = '';
+    if (state.debtType !== 'none' && !debtTraps(state.debtType) && REPAY_COST[state.debtType]){
+      var owedCost = REPAY_COST[state.debtType];
+      debtNote = '<div class="calc-detail" style="color:var(--brick);margin-top:6px">↳ Борг (' + DEBT_LABELS[state.debtType] + ') досі не погашений — закрити коштувало б ' + fmt(owedCost) + '. Реальний залишок ≈ ' + fmt(clamp0(state.capital - owedCost)) + '.</div>';
+    }
     return '<div class="final-card" style="--c:' + e.color + '">' +
       '<div class="arch" style="color:' + e.color + '">' + e.title + '</div>' +
       '<div class="delta">' + fmt(START_CAPITAL) + ' → ' + fmt(state.capital) +
         ' <span class="' + (totalDelta > 0 ? 'up' : (totalDelta < 0 ? 'down' : '')) + '">(' + (totalDelta >= 0 ? '+' : '') + fmt(totalDelta).replace(' ₴', '') + ' ₴)</span></div>' +
+      debtNote +
       '<p>' + e.text + '</p>' +
       (state.phoneVia === 'saved' ? '<div class="phone-note"><span class="ach-tag">🏆 Досягнення</span><span class="ach-text">iPhone куплено повністю за власні зароблені гроші — без жодної копійки боргу.</span></div>' : '') +
       '</div>' +
@@ -812,7 +840,7 @@
       '</div>' +
       '<div class="compare forecast" style="--c:' + e.color + '"><span class="tag">⏳ Через 10 років</span>' + forecastLine(state, e.arch) + '</div>' +
       '<div class="compare altview"><span class="tag">🔀 А що якби</span>Якби ці 20 000 ₴ усі три роки просто лежали в ' + cmp.title + (cmp.approx ? ' під орієнтовно ' : ' під ') + Math.round(cmp.rate*100) + '% — вийшло б ' + fmt(alt) + '. У тебе зараз ' + fmt(state.capital) +
-        ' (' + (diff>=0?'+':'') + fmt(diff) + ' до цього орієнтира).</div>' +
+        ' (' + (diff>=0?'+':'') + fmt(diff) + ' до цього орієнтира). А якби вони просто пролежали під подушкою — за умовної інфляції ≈12%/рік їхня купівельна спроможність до кінця гри впала б приблизно до ' + fmt(Math.round(START_CAPITAL * Math.pow(0.88, TOTAL_CYCLES))) + ' — навіть «нічого не робити» коштує грошей.</div>' +
       '<div class="actions"><button class="btn" onclick="Fingramm.restart()">Зіграти ще раз</button></div>';
   }
 
